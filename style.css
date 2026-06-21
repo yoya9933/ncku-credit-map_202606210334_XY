@@ -419,6 +419,81 @@ tbody tr:last-child td {
 .gap-summary-item.success {
   border-left-color: var(--accent);
 }
+.decision-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.decision-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.decision-plan-card {
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--accent);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 14px;
+}
+
+.decision-plan-card.warning {
+  border-left-color: var(--warn);
+}
+
+.decision-plan-card.danger {
+  border-left-color: var(--danger);
+}
+
+.decision-plan-card h3 {
+  margin-bottom: 4px;
+  font-size: 1rem;
+}
+
+.decision-plan-target,
+.decision-plan-guidance {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.decision-plan-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.decision-plan-metrics div {
+  min-width: 0;
+}
+
+.decision-plan-metrics dt {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.decision-plan-metrics dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.plan-checkbox-cell {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.plan-checkbox {
+  width: 18px;
+  min-height: 18px;
+  cursor: pointer;
+}
 
 .gap-layout {
   display: grid;

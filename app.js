@@ -20,6 +20,31 @@
     "畢業前處理",
     "待問系辦",
   ];
+  const COURSE_QUADRANTS = ["高必要高風險", "高必要低/中風險", "低必要高風險", "低必要低/中風險"];
+  const COURSE_RECOMMENDATIONS = ["先修未滿", "核心但限量", "優先", "平衡用", "暫緩", "可選"];
+  const DECISION_PLAN_CONFIG = [
+    {
+      key: "planA",
+      label: "A 案：穩健復學",
+      shortLabel: "A案",
+      target: "12-15 學分",
+      guidance: "高必要高風險最多 1 門，至少 1 門平衡用課，平均風險盡量 <= 3。",
+    },
+    {
+      key: "planB",
+      label: "B 案：正常推進",
+      shortLabel: "B案",
+      target: "15-18 學分",
+      guidance: "高必要高風險最多 2 門，至少 1 門平衡用課，平均風險盡量 <= 3.5。",
+    },
+    {
+      key: "planC",
+      label: "C 案：保守修復",
+      shortLabel: "C案",
+      target: "9-12 學分",
+      guidance: "高必要高風險 0-1 門，至少 1-2 門平衡用課，平均風險盡量 <= 3。",
+    },
+  ];
   const completedStatuses = new Set(["已修", "已抵免", "已認列"]);
 
   function makeDefaultCourse(id, course) {
@@ -50,6 +75,12 @@
       summerPrepPriority: course.summerPrepPriority || inferSummerPrepPriority(course),
       conflictWith: course.conflictWith || "",
       formalScheduleDecision: course.formalScheduleDecision || inferFormalScheduleDecision(course),
+      necessityScore: toScore(course.necessityScore),
+      riskScore: toScore(course.riskScore),
+      planA: toBoolean(course.planA),
+      planB: toBoolean(course.planB),
+      planC: toBoolean(course.planC),
+      decisionNote: course.decisionNote || "",
     };
   }
 
@@ -631,6 +662,12 @@
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
   }
 
+  function toScore(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return 3;
+    return Math.min(Math.max(Math.round(parsed), 1), 5);
+  }
+
   function toBoolean(value) {
     return value === true || value === "true" || value === "on" || value === 1 || value === "1";
   }
@@ -732,6 +769,12 @@
       formalScheduleDecision: FORMAL_SCHEDULE_DECISIONS.includes(source.formalScheduleDecision)
         ? source.formalScheduleDecision
         : inferFormalScheduleDecision(source),
+      necessityScore: toScore(source.necessityScore),
+      riskScore: toScore(source.riskScore),
+      planA: toBoolean(source.planA),
+      planB: toBoolean(source.planB),
+      planC: toBoolean(source.planC),
+      decisionNote: String(source.decisionNote || "").trim(),
     };
   }
 
@@ -802,6 +845,58 @@
     ];
   }
 
+  function getCourseQuadrant(course) {
+    const normalized = normalizeCourse(course);
+    if (normalized.necessityScore >= 4 && normalized.riskScore >= 4) return "高必要高風險";
+    if (normalized.necessityScore >= 4 && normalized.riskScore <= 3) return "高必要低/中風險";
+    if (normalized.necessityScore <= 3 && normalized.riskScore >= 4) return "低必要高風險";
+    return "低必要低/中風險";
+  }
+
+  function getCourseRecommendation(course) {
+    const normalized = normalizeCourse(course);
+    if (normalized.decisionStatus === "先修未滿") return "先修未滿";
+    const quadrant = getCourseQuadrant(normalized);
+    if (quadrant === "高必要高風險") return "核心但限量";
+    if (quadrant === "高必要低/中風險") return "優先";
+    if (quadrant === "低必要低/中風險") return "平衡用";
+    if (quadrant === "低必要高風險") return "暫緩";
+    return "可選";
+  }
+
+  function getPlanStats(courses, planKey) {
+    const selected = courses.map(normalizeCourse).filter((course) => course[planKey]);
+    const totalRisk = selected.reduce((sum, course) => sum + course.riskScore, 0);
+    return {
+      totalCredits: sumCredits(selected),
+      courseCount: selected.length,
+      highNeedHighRiskCount: selected.filter((course) => getCourseQuadrant(course) === "高必要高風險").length,
+      averageRisk: selected.length ? Math.round((totalRisk / selected.length) * 10) / 10 : 0,
+      balanceCourseCount: selected.filter((course) => getCourseRecommendation(course) === "平衡用").length,
+      prerequisiteMissingCount: selected.filter((course) => course.decisionStatus === "先修未滿").length,
+      courses: selected,
+    };
+  }
+
+  function buildCourseDecisionViewModel(courses) {
+    const normalizedCourses = courses.map(normalizeCourse);
+    const rows = normalizedCourses.map((course) => ({
+      ...course,
+      quadrant: getCourseQuadrant(course),
+      recommendation: getCourseRecommendation(course),
+    }));
+    return {
+      rows,
+      quadrantSummary: COURSE_QUADRANTS.map((label) => ({
+        label,
+        count: rows.filter((course) => course.quadrant === label).length,
+      })),
+      planStats: DECISION_PLAN_CONFIG.map((plan) => ({
+        ...plan,
+        stats: getPlanStats(normalizedCourses, plan.key),
+      })),
+    };
+  }
   function calculateSpecialRuleGaps(courses) {
     const normalizedCourses = courses.map(normalizeCourse);
     const designCompletedCredits = Math.min(
@@ -1099,6 +1194,14 @@
       ["開課節奏", "offeringCadence"],
       ["延後風險", "delayRisk"],
       ["決策狀態", "decisionStatus"],
+      ["必要性分數", "necessityScore"],
+      ["風險分數", "riskScore"],
+      ["四象限", getCourseQuadrant],
+      ["建議等級", getCourseRecommendation],
+      ["A案", "planA"],
+      ["B案", "planB"],
+      ["C案", "planC"],
+      ["決策備註", "decisionNote"],
       ["暑假預習優先度", "summerPrepPriority"],
       ["衝堂對象", "conflictWith"],
       ["是否放入正式課表", "formalScheduleDecision"],
@@ -1113,8 +1216,9 @@
     courses.map(normalizeCourse).forEach((course) => {
       rows.push(
         columns
-          .map(([, key]) => {
-            const value = typeof course[key] === "boolean" ? (course[key] ? "是" : "否") : course[key];
+          .map(([, accessor]) => {
+            const rawValue = typeof accessor === "function" ? accessor(course) : course[accessor];
+            const value = typeof rawValue === "boolean" ? (rawValue ? "是" : "否") : rawValue;
             return csvEscape(value);
           })
           .join(","),
@@ -1122,7 +1226,6 @@
     });
     return `\uFEFF${rows.join("\n")}`;
   }
-
   function serializeBackup(courses, requirements) {
     return JSON.stringify(
       {
@@ -1157,6 +1260,9 @@
     SUMMER_PREP_PRIORITIES,
     FORMAL_SCHEDULE_DECISIONS,
     COURSE_DECISION_STATUSES,
+    COURSE_QUADRANTS,
+    COURSE_RECOMMENDATIONS,
+    DECISION_PLAN_CONFIG,
     DEFAULT_REQUIREMENTS,
     DEFAULT_COURSES,
     CONFLICT_MATRIX,
@@ -1170,10 +1276,14 @@
     calculateDashboard,
     calculateGapAnalysis,
     buildGapAnalysisViewModel,
+    buildCourseDecisionViewModel,
     calculateSpecialRuleGaps,
     calculatePlanningAnalysis,
     calculateCandidateCourses1151,
     calculateSummerPrepPlan,
+    getCourseQuadrant,
+    getCourseRecommendation,
+    getPlanStats,
     getCourseTableSummary,
     getCourseDetailRows,
     applyFilters,
@@ -1264,6 +1374,9 @@
     elements.candidate1151TableBody = document.querySelector("#candidate1151TableBody");
     elements.conflictMatrixTableBody = document.querySelector("#conflictMatrixTableBody");
     elements.summerPrepTableBody = document.querySelector("#summerPrepTableBody");
+    elements.decisionQuadrantSummary = document.querySelector("#decisionQuadrantSummary");
+    elements.decisionPlanStats = document.querySelector("#decisionPlanStats");
+    elements.courseDecisionTableBody = document.querySelector("#courseDecisionTableBody");
     elements.exportJsonButton = document.querySelector("#exportJsonButton");
     elements.exportCsvButton = document.querySelector("#exportCsvButton");
     elements.resetOfficialDefaultsButton = document.querySelector("#resetOfficialDefaultsButton");
@@ -1325,6 +1438,12 @@
       summerPrepPriority: form.elements.summerPrepPriority.value,
       conflictWith: form.elements.conflictWith.value,
       formalScheduleDecision: form.elements.formalScheduleDecision.value,
+      necessityScore: form.elements.necessityScore.value,
+      riskScore: form.elements.riskScore.value,
+      planA: form.elements.planA.checked,
+      planB: form.elements.planB.checked,
+      planC: form.elements.planC.checked,
+      decisionNote: form.elements.decisionNote.value,
       prerequisites: form.elements.prerequisites.value,
       schedule: form.elements.schedule.value,
       teacher: form.elements.teacher.value,
@@ -1356,6 +1475,12 @@
     form.elements.summerPrepPriority.value = normalized.summerPrepPriority;
     form.elements.conflictWith.value = normalized.conflictWith;
     form.elements.formalScheduleDecision.value = normalized.formalScheduleDecision;
+    form.elements.necessityScore.value = normalized.necessityScore;
+    form.elements.riskScore.value = normalized.riskScore;
+    form.elements.planA.checked = normalized.planA;
+    form.elements.planB.checked = normalized.planB;
+    form.elements.planC.checked = normalized.planC;
+    form.elements.decisionNote.value = normalized.decisionNote;
     form.elements.prerequisites.value = normalized.prerequisites;
     form.elements.schedule.value = normalized.schedule;
     form.elements.teacher.value = normalized.teacher;
@@ -1380,6 +1505,12 @@
     elements.courseForm.elements.summerPrepPriority.value = "不讀";
     elements.courseForm.elements.conflictWith.value = "";
     elements.courseForm.elements.formalScheduleDecision.value = "否";
+    elements.courseForm.elements.necessityScore.value = "3";
+    elements.courseForm.elements.riskScore.value = "3";
+    elements.courseForm.elements.planA.checked = false;
+    elements.courseForm.elements.planB.checked = false;
+    elements.courseForm.elements.planC.checked = false;
+    elements.courseForm.elements.decisionNote.value = "";
     editingCourseId = null;
     elements.courseFormMode.textContent = "目前模式：新增課程";
     elements.courseSubmitButton.textContent = "新增課程";
@@ -1443,6 +1574,10 @@
     if (value === "中" || value === "備選" || value === "115-1 備選" || value === "115-2 預備") return "warning";
     if (value === "低" || value === "已完成" || value === "是" || value === "115-1 優先") return "success";
     if (value === "待問系辦" || value === "否") return "muted";
+    if (value === COURSE_RECOMMENDATIONS[1] || value === COURSE_RECOMMENDATIONS[4] || value === COURSE_QUADRANTS[0] || value === COURSE_QUADRANTS[2]) return "danger";
+    if (value === COURSE_QUADRANTS[1]) return "warning";
+    if (value === COURSE_RECOMMENDATIONS[2] || value === COURSE_RECOMMENDATIONS[3] || value === COURSE_QUADRANTS[3]) return "success";
+    if (value === COURSE_RECOMMENDATIONS[5]) return "muted";
     return "";
   }
 
@@ -1641,6 +1776,108 @@
     );
   }
 
+
+  function appendPlanCheckboxCell(row, course, planKey, label) {
+    const cell = document.createElement("td");
+    cell.className = "plan-checkbox-cell";
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "plan-checkbox";
+    input.checked = Boolean(course[planKey]);
+    input.dataset.action = "toggle-plan";
+    input.dataset.id = course.id;
+    input.dataset.planKey = planKey;
+    input.setAttribute("aria-label", `${label} - ${course.courseName}`);
+    cell.append(input);
+    row.append(cell);
+  }
+
+  function renderCourseDecision() {
+    const view = buildCourseDecisionViewModel(courses);
+
+    elements.decisionQuadrantSummary.replaceChildren(
+      ...view.quadrantSummary.map((item) => {
+        const node = document.createElement("div");
+        node.className = `gap-summary-item ${badgeTone(item.label)}`.trim();
+        const label = document.createElement("span");
+        label.textContent = item.label;
+        const value = document.createElement("strong");
+        value.textContent = item.count;
+        const unit = document.createElement("small");
+        unit.textContent = "門";
+        const detail = document.createElement("p");
+        detail.textContent = "依必要性與風險分數即時計算";
+        node.append(label, value, unit, detail);
+        return node;
+      }),
+    );
+
+    elements.decisionPlanStats.replaceChildren(
+      ...view.planStats.map((plan) => {
+        const stats = plan.stats;
+        const node = document.createElement("div");
+        const overloadedCore = plan.key === "planB" ? stats.highNeedHighRiskCount > 2 : stats.highNeedHighRiskCount > 1;
+        const overloadedRisk = plan.key === "planB" ? stats.averageRisk > 3.5 : stats.averageRisk > 3;
+        const tone = stats.prerequisiteMissingCount > 0 || overloadedCore ? "danger" : overloadedRisk ? "warning" : "success";
+        node.className = `decision-plan-card ${tone}`.trim();
+
+        const title = document.createElement("h3");
+        title.textContent = plan.label;
+        const target = document.createElement("p");
+        target.className = "decision-plan-target";
+        target.textContent = `目標 ${plan.target}`;
+
+        const metrics = document.createElement("dl");
+        metrics.className = "decision-plan-metrics";
+        [
+          ["總學分", stats.totalCredits],
+          ["課程數", stats.courseCount],
+          ["高必要高風險", stats.highNeedHighRiskCount],
+          ["平均風險", stats.averageRisk.toFixed(1)],
+          ["平衡用課", stats.balanceCourseCount],
+          ["先修未滿", stats.prerequisiteMissingCount],
+        ].forEach(([label, value]) => {
+          const item = document.createElement("div");
+          const term = document.createElement("dt");
+          term.textContent = label;
+          const description = document.createElement("dd");
+          description.textContent = value;
+          item.append(term, description);
+          metrics.append(item);
+        });
+
+        const guidance = document.createElement("p");
+        guidance.className = "decision-plan-guidance";
+        guidance.textContent = plan.guidance;
+        node.append(title, target, metrics, guidance);
+        return node;
+      }),
+    );
+
+    elements.courseDecisionTableBody.replaceChildren();
+    if (view.rows.length === 0) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 10;
+      cell.textContent = "尚無課程資料";
+      row.append(cell);
+      elements.courseDecisionTableBody.append(row);
+      return;
+    }
+
+    view.rows.forEach((course) => {
+      const row = document.createElement("tr");
+      appendTextCell(row, course.courseName, "course-name-cell");
+      appendTextCell(row, course.credits);
+      appendTextCell(row, course.necessityScore);
+      appendTextCell(row, course.riskScore);
+      appendBadgeCell(row, course.quadrant);
+      appendBadgeCell(row, course.recommendation);
+      DECISION_PLAN_CONFIG.forEach((plan) => appendPlanCheckboxCell(row, course, plan.key, plan.shortLabel));
+      appendTextCell(row, course.decisionNote, "note-cell");
+      elements.courseDecisionTableBody.append(row);
+    });
+  }
   function renderGapAnalysis() {
     const view = buildGapAnalysisViewModel(courses, requirements);
     elements.gapSummary.replaceChildren(
@@ -1736,6 +1973,7 @@
     renderCandidate1151Table();
     renderConflictMatrixTable();
     renderSummerPrepTable();
+    renderCourseDecision();
     renderGapAnalysis();
   }
 
@@ -1791,6 +2029,17 @@
       if (preset === "reset") setFilters({});
     });
 
+    elements.courseDecisionTableBody.addEventListener("change", (event) => {
+      if (event.target.dataset.action !== "toggle-plan") return;
+      const id = event.target.dataset.id;
+      const planKey = event.target.dataset.planKey;
+      if (!DECISION_PLAN_CONFIG.some((plan) => plan.key === planKey)) return;
+      courses = courses.map((course) =>
+        course.id === id ? normalizeCourse({ ...course, [planKey]: event.target.checked }) : course,
+      );
+      saveState();
+      render();
+    });
     elements.courseTableBody.addEventListener("click", (event) => {
       const action = event.target.dataset.action;
       const id = event.target.dataset.id;

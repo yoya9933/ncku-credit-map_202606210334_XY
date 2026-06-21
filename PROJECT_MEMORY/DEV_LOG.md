@@ -54,3 +54,20 @@ node --check .\app.js
 - 視需要新增一份範例 JSON 備份，但內容必須去識別化。
 - 視需要新增 GitHub Pages 發布說明。
 - 視需要新增資料清理 SOP，處理聊天逐字稿與私人課表資料。
+
+## 2026-06-21 - Course Decision v0.1
+
+新增課程決策器 v0.1：
+
+- 課程資料新增 `necessityScore`、`riskScore`、`planA`、`planB`、`planC`、`decisionNote`。
+- `quadrant` 與 `recommendation` 維持為衍生資料，由 pure functions 即時計算，不寫入 LocalStorage。
+- 新增 A/B/C 三案統計：總學分、課程數、高必要高風險課數、平均風險、平衡用課數、先修未滿課數。
+- 新增課程表單可設定分數與方案；課程決策器總表可快速勾選 A/B/C。
+- CSV 匯出加入四象限與建議等級，JSON 備份只保留原始欄位。
+
+驗證：
+
+```powershell
+node .\credit-map.test.mjs
+node --check .\app.js
+```

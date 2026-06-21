@@ -19,13 +19,17 @@ const {
   calculateCandidateCourses1151,
   calculateDashboard,
   calculateGapAnalysis,
+  buildCourseDecisionViewModel,
   buildGapAnalysisViewModel,
   calculatePlanningAnalysis,
   calculateSummerPrepPlan,
   completedStatuses,
   exportCoursesToCsv,
+  getCourseQuadrant,
+  getCourseRecommendation,
   getCourseDetailRows,
   getCourseTableSummary,
+  getPlanStats,
 } = context.CreditMapLogic;
 
 assert.equal(DEFAULT_REQUIREMENTS.totalRequiredCredits, 135);
@@ -71,6 +75,12 @@ assert.equal(defaultPhysics.offeringCadence, "上學期");
 assert.equal(defaultPhysics.delayRisk, "高");
 assert.equal(defaultPhysics.summerPrepPriority, "A");
 assert.equal(defaultPhysics.formalScheduleDecision, "是");
+assert.equal(defaultPhysics.necessityScore, 3);
+assert.equal(defaultPhysics.riskScore, 3);
+assert.equal(defaultPhysics.planA, false);
+assert.equal(defaultPhysics.planB, false);
+assert.equal(defaultPhysics.planC, false);
+assert.equal(defaultPhysics.decisionNote, "");
 assert.match(defaultPhysics.conflictWith, /工程地質學/);
 assert.equal(DEFAULT_COURSES.find((course) => course.courseName === "微積分（二）").decisionStatus, "115-2 預備");
 assert.equal(DEFAULT_COURSES.find((course) => course.courseName === "流體力學（一）").decisionStatus, "先修未滿");
@@ -107,6 +117,17 @@ const courseListMarkup = indexHtml.match(/<h2>課程列表<\/h2>[\s\S]*?<thead>(
 assert.deepEqual(
   [...courseListMarkup.matchAll(/<th>(.*?)<\/th>/g)].map((match) => match[1]),
   ["課名", "學分", "類別", "學分狀態", "決策狀態", "GPA", "延後風險", "正式課表", "衝堂", "操作"],
+);
+assert.match(indexHtml, /name="necessityScore"/);
+assert.match(indexHtml, /name="riskScore"/);
+assert.match(indexHtml, /name="planA"/);
+assert.match(indexHtml, /name="planB"/);
+assert.match(indexHtml, /name="planC"/);
+assert.match(indexHtml, /name="decisionNote"/);
+const courseDecisionMarkup = indexHtml.match(/<h2>課程決策器<\/h2>[\s\S]*?<thead>([\s\S]*?)<\/thead>/)?.[1] || "";
+assert.deepEqual(
+  [...courseDecisionMarkup.matchAll(/<th>(.*?)<\/th>/g)].map((match) => match[1]),
+  ["課名", "學分", "必要性", "風險", "四象限", "建議", "A案", "B案", "C案", "決策備註"],
 );
 
 const defaultGapAnalysis = calculateGapAnalysis(DEFAULT_COURSES, DEFAULT_REQUIREMENTS);
@@ -213,6 +234,113 @@ assert.deepEqual(
   ],
 );
 
+const decisionCourses = [
+  {
+    id: "decision-1",
+    courseName: "流體力學（一）",
+    credits: 3,
+    category: "水利必修",
+    status: "未修",
+    decisionStatus: "115-1 優先",
+    necessityScore: 5,
+    riskScore: 5,
+    planA: true,
+    planB: true,
+    planC: false,
+    decisionNote: "核心課但需要限量",
+  },
+  {
+    id: "decision-2",
+    courseName: "水利及海洋工程概論",
+    credits: 1,
+    category: "水利必修",
+    status: "未修",
+    decisionStatus: "115-1 備選",
+    necessityScore: 5,
+    riskScore: 2,
+    planA: true,
+    planB: true,
+    planC: false,
+  },
+  {
+    id: "decision-3",
+    courseName: "通識 A",
+    credits: 2,
+    category: "通識",
+    status: "未修",
+    decisionStatus: "115-1 備選",
+    necessityScore: 3,
+    riskScore: 2,
+    planA: true,
+    planB: true,
+    planC: true,
+  },
+  {
+    id: "decision-4",
+    courseName: "高風險選修",
+    credits: 3,
+    category: "自由選修",
+    status: "未修",
+    decisionStatus: "待問系辦",
+    necessityScore: 2,
+    riskScore: 4,
+    planA: false,
+    planB: true,
+    planC: false,
+  },
+  {
+    id: "decision-5",
+    courseName: "先修未滿課",
+    credits: 3,
+    category: "水利必修",
+    status: "未修",
+    decisionStatus: "先修未滿",
+    necessityScore: 5,
+    riskScore: 5,
+    planA: true,
+    planB: false,
+    planC: false,
+  },
+];
+
+assert.equal(getCourseQuadrant(decisionCourses[0]), "高必要高風險");
+assert.equal(getCourseQuadrant(decisionCourses[1]), "高必要低/中風險");
+assert.equal(getCourseQuadrant(decisionCourses[2]), "低必要低/中風險");
+assert.equal(getCourseQuadrant(decisionCourses[3]), "低必要高風險");
+assert.equal(getCourseRecommendation(decisionCourses[0]), "核心但限量");
+assert.equal(getCourseRecommendation(decisionCourses[1]), "優先");
+assert.equal(getCourseRecommendation(decisionCourses[2]), "平衡用");
+assert.equal(getCourseRecommendation(decisionCourses[3]), "暫緩");
+assert.equal(getCourseRecommendation(decisionCourses[4]), "先修未滿");
+
+const planAStats = getPlanStats(decisionCourses, "planA");
+assert.equal(planAStats.totalCredits, 9);
+assert.equal(planAStats.courseCount, 4);
+assert.equal(planAStats.highNeedHighRiskCount, 2);
+assert.equal(planAStats.averageRisk, 3.5);
+assert.equal(planAStats.balanceCourseCount, 1);
+assert.equal(planAStats.prerequisiteMissingCount, 1);
+assert.deepEqual(
+  JSON.parse(JSON.stringify(planAStats.courses.map((course) => course.courseName))),
+  ["流體力學（一）", "水利及海洋工程概論", "通識 A", "先修未滿課"],
+);
+
+const decisionView = buildCourseDecisionViewModel(decisionCourses);
+assert.deepEqual(JSON.parse(JSON.stringify(decisionView.quadrantSummary.map((item) => [item.label, item.count]))), [
+  ["高必要高風險", 2],
+  ["高必要低/中風險", 1],
+  ["低必要高風險", 1],
+  ["低必要低/中風險", 1],
+]);
+assert.deepEqual(JSON.parse(JSON.stringify(decisionView.planStats.map((item) => [item.label, item.stats.totalCredits]))), [
+  ["A 案：穩健復學", 9],
+  ["B 案：正常推進", 9],
+  ["C 案：保守修復", 2],
+]);
+
+const decisionCsv = exportCoursesToCsv(decisionCourses);
+assert.match(decisionCsv, /必要性分數,風險分數,四象限,建議等級,A案,B案,C案,決策備註/);
+assert.match(decisionCsv, /"高必要高風險","核心但限量","是","是","否","核心課但需要限量"/);
 const courses = [
   {
     id: "c1",
@@ -378,5 +506,5 @@ assert.deepEqual(filtered.map((course) => course.courseName), ["微積分（二�
 
 const csv = exportCoursesToCsv(courses);
 assert.match(csv, /課名,學分,類別,狀態/);
-assert.match(csv, /開課節奏,延後風險,決策狀態,暑假預習優先度,衝堂對象,是否放入正式課表/);
+assert.match(csv, /開課節奏,延後風險,決策狀態,必要性分數,風險分數,四象限,建議等級,A案,B案,C案,決策備註,暑假預習優先度,衝堂對象,是否放入正式課表/);
 assert.match(csv, /"微積分（一）"/);

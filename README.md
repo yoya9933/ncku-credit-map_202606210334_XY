@@ -121,3 +121,16 @@ nckuCreditMapStateV1
 ```powershell
 node .\credit-map.test.mjs
 ```
+
+## 課程決策器 v0.1
+
+這一版在既有課程資料上加入半自動決策層：
+
+- 每門課可設定 `necessityScore` 與 `riskScore`，範圍 1-5，預設 3。
+- 每門課可勾選 `planA` / `planB` / `planC`，分別代表穩健復學、正常推進、保守修復三種方案。
+- `quadrant` 與 `recommendation` 不存入 LocalStorage，會由 `necessityScore`、`riskScore`、`decisionStatus` 即時計算。
+- 課程決策器總表可直接快速勾選 A/B/C，方便反覆調整方案。
+- A/B/C 統計會顯示總學分、課程數、高必要高風險課數、平均風險、平衡用課數、先修未滿課數。
+- CSV 匯出會包含四象限與建議等級，方便丟到 Excel 或 Google Sheets 檢查。
+
+v0.1 的定位不是全自動排課，而是用可解釋規則輔助判斷哪些課該優先、限量、平衡或暫緩。
