@@ -152,6 +152,7 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
 function gradeMeets(course, minimumGrade) {
   if (!isCompleted(course)) return false;
   if (!minimumGrade || ["已抵免", "已認列"].includes(course.status)) return true;
+  if (course.grade === "") return true;
   const grade = Number(course.grade);
   return !Number.isFinite(grade) || grade >= minimumGrade;
 }
