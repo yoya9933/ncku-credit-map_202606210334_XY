@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Loading NCKU Credit Map demo…</title>
+  <style>
+    body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f6f7f9;color:#1f2937}main{max-width:560px;padding:32px;text-align:center}p{color:#667085}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>載入去識別化 Demo</h1>
+    <p>正在建立示範學籍狀態，完成後會進入學分地圖。</p>
+    <p id="status">Loading…</p>
+  </main>
+  <script type="module">
+    import { APP_CONFIG, createCleanDefaultState, upsertCourse } from "./app-core.js";
+
+    const status = document.querySelector("#status");
+    try {
+      const response = await fetch("./demo-state.json", { cache: "no-store" });
+      if (!response.ok) throw new Error(`demo-state.json: ${response.status}`);
+      const demo = await response.json();
+      const base = createCleanDefaultState();
+      let courses = base.courses;
+      for (const override of demo.courses || []) {
+        const existing = courses.find((course) => course.courseCode === override.courseCode);
+        if (!existing) continue;
+        courses = upsertCourse(courses, { ...existing, ...override, id: existing.id });
+      }
+      const state = {
+        version: APP_CONFIG.backupVersion,
+        config: demo.config || base.config,
+        courses,
+      };
+      localStorage.setItem(APP_CONFIG.storageKey, JSON.stringify(state));
+      localStorage.removeItem(APP_CONFIG.snapshotKey);
+      location.replace("./index.html?demo=1");
+    } catch (error) {
+      status.textContent = `Demo 載入失敗：${error.message}`;
+    }
+  </script>
+</body>
+</html>
