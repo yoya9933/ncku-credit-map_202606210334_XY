@@ -1,396 +1,64 @@
 <!doctype html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NCKU Return OS｜學分地圖</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="page-shell">
-        <p class="eyebrow">NCKU Return OS</p>
-        <h1>學分地圖</h1>
-        <p class="header-note">復學前整理畢業進度、必修缺口、候選課程與 GPA 風險。</p>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NCKU Credit Map</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="page-shell">
+      <p class="eyebrow">NCKU Credit Map v0.2</p>
+      <h1>學分地圖</h1>
+      <p class="header-note">以畢業規則、先修限制與衝堂條件計算，不把「修過」直接等同「可認列」。</p>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="section">
+      <div class="section-heading"><h2>畢業進度</h2><p>114 學年度規則；學期設定集中於 curriculum.js。</p></div>
+      <div id="dashboard" class="dashboard-grid"></div>
+      <ul id="ruleSummary" class="analysis-block"></ul>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>目前學期候選課</h2><p>先修資格會即時計算。</p></div>
+      <div class="table-wrap"><table><thead><tr><th>課程</th><th>學分</th><th>決策</th><th>資格</th></tr></thead><tbody id="candidateBody"></tbody></table></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>自動衝堂檢查</h2><p>由結構化上課時段計算，不再維護人工衝堂矩陣。</p></div>
+      <ul id="conflictList" class="analysis-block"></ul>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>A / B / C 修課方案</h2><p>學分上下限、風險、先修與衝堂都會參與有效性判斷。</p></div>
+      <div id="plans" class="decision-plan-grid"></div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading"><h2>課程資料</h2><p>公開 repo 只提供去識別化預設資料；個人狀態保存在瀏覽器。</p></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>課程</th><th>認列/學分</th><th>規則群組</th><th>狀態</th><th>成績</th><th>決策</th><th>本系選修</th><th>計入畢業</th></tr></thead>
+          <tbody id="courseBody"></tbody>
+        </table>
       </div>
-    </header>
+    </section>
 
-    <main class="page-shell">
-      <section class="section">
-        <div class="section-heading">
-          <h2>學分需求設定</h2>
-          <p>先用可修改的暫定數字，等正式畢業規定確認後再調整。</p>
-        </div>
-        <form id="requirementsForm" class="grid-form">
-          <label>
-            <span>畢業總學分需求</span>
-            <input type="number" min="0" step="1" name="totalRequiredCredits" value="135">
-          </label>
-          <label>
-            <span>水利必修需求</span>
-            <input type="number" min="0" step="1" name="majorRequiredCredits" value="76">
-          </label>
-          <label>
-            <span>通識需求</span>
-            <input type="number" min="0" step="1" name="generalCredits" value="28">
-          </label>
-          <label>
-            <span>自由選修需求</span>
-            <input type="number" min="0" step="1" name="electiveCredits" value="31">
-          </label>
-          <label>
-            <span>跨域課程需求</span>
-            <input type="number" min="0" step="1" name="crossDomainCredits" value="0">
-          </label>
-          <div class="form-actions">
-            <button type="submit">儲存需求</button>
-          </div>
-        </form>
-        <p id="requirementsStatus" class="status-line" aria-live="polite"></p>
-      </section>
+    <section class="section">
+      <div class="section-heading"><h2>備份與移轉</h2><p>V1 LocalStorage 會保留備份後自動遷移到 V2。</p></div>
+      <div class="tool-row">
+        <button id="exportJson" type="button">匯出 JSON</button>
+        <button id="exportCsv" type="button">匯出 CSV</button>
+        <label class="file-label"><span>匯入 JSON</span><input id="importJson" type="file" accept="application/json,.json"></label>
+        <button id="resetDemo" class="secondary" type="button">重置公開預設資料</button>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
+    </section>
+  </main>
 
-      <section class="section">
-        <div class="section-heading">
-          <h2>總覽 Dashboard</h2>
-        </div>
-        <div id="dashboard" class="dashboard-grid" aria-live="polite"></div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>新增課程表單</h2>
-          <p id="courseFormMode">目前模式：新增課程</p>
-        </div>
-        <form id="courseForm" class="grid-form">
-          <input type="hidden" name="id">
-          <label>
-            <span>課名</span>
-            <input type="text" name="courseName" required placeholder="例如：工程數學（二）">
-          </label>
-          <label>
-            <span>學分</span>
-            <input type="number" min="0" step="1" name="credits" required value="3">
-          </label>
-          <label>
-            <span>類別</span>
-            <select name="category"></select>
-          </label>
-          <label>
-            <span>狀態</span>
-            <select name="status"></select>
-          </label>
-          <label>
-            <span>決策狀態</span>
-            <select name="decisionStatus"></select>
-          </label>
-          <label>
-            <span>學期</span>
-            <input type="text" name="semester" placeholder="113-1、114-1、待排">
-          </label>
-          <label>
-            <span>成績</span>
-            <input type="text" name="grade" placeholder="可留白">
-          </label>
-          <label>
-            <span>GPA 風險</span>
-            <select name="gpaRisk"></select>
-          </label>
-          <label>
-            <span>建議修課時間</span>
-            <input type="text" name="suggestedYear" placeholder="例如：大二上">
-          </label>
-          <label>
-            <span>通常開課學期</span>
-            <input type="text" name="offeredSemester" placeholder="上 / 下 / 不確定">
-          </label>
-          <label>
-            <span>預計 / 可修學期</span>
-            <input type="text" name="planSemester" placeholder="例如：115-1 可修">
-          </label>
-          <label>
-            <span>優先順序</span>
-            <select name="priority"></select>
-          </label>
-          <label>
-            <span>開課節奏</span>
-            <select name="offeringCadence"></select>
-          </label>
-          <label>
-            <span>延後風險</span>
-            <select name="delayRisk"></select>
-          </label>
-          <label>
-            <span>暑假預習優先度</span>
-            <select name="summerPrepPriority"></select>
-          </label>
-          <label>
-            <span>是否放入正式課表</span>
-            <select name="formalScheduleDecision"></select>
-          </label>
-          <label>
-            <span>必要性分數</span>
-            <input type="number" min="1" max="5" step="1" name="necessityScore" value="3">
-          </label>
-          <label>
-            <span>風險分數</span>
-            <input type="number" min="1" max="5" step="1" name="riskScore" value="3">
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="planA">
-            <span>放入 A 案：穩健復學</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="planB">
-            <span>放入 B 案：正常推進</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="planC">
-            <span>放入 C 案：保守修復</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="isRequired">
-            <span>是否必修</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="isBlocking">
-            <span>是否卡畢業</span>
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="retakeNeeded">
-            <span>是否可能需要重修</span>
-          </label>
-          <label class="wide">
-            <span>先修限制</span>
-            <textarea name="prerequisites" rows="2" placeholder="例如：普通物理學（一）45 分以上"></textarea>
-          </label>
-          <label class="wide">
-            <span>衝堂對象</span>
-            <textarea name="conflictWith" rows="2" placeholder="例如：工程地質學、海洋工程設計"></textarea>
-          </label>
-          <label class="wide">
-            <span>上課時間 / 教師</span>
-            <textarea name="schedule" rows="2" placeholder="例如：[1]8、[4]5~6，教師：管培辰"></textarea>
-          </label>
-          <label>
-            <span>教師</span>
-            <input type="text" name="teacher" placeholder="可留白">
-          </label>
-          <label class="wide">
-            <span>決策備註</span>
-            <textarea name="decisionNote" rows="2" placeholder="例如：核心課，但復學第一學期需控制數量"></textarea>
-          </label>
-          <label class="wide">
-            <span>備註</span>
-            <textarea name="note" rows="3" placeholder="例如：需評估是否和其他高壓課同修"></textarea>
-          </label>
-          <div class="form-actions wide">
-            <button id="courseSubmitButton" type="submit">新增課程</button>
-            <button id="cancelEditButton" class="secondary" type="button" hidden>取消編輯</button>
-          </div>
-        </form>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>篩選器</h2>
-        </div>
-        <form id="filtersForm" class="filter-grid">
-          <label>
-            <span>類別</span>
-            <select name="category"></select>
-          </label>
-          <label>
-            <span>狀態</span>
-            <select name="status"></select>
-          </label>
-          <label>
-            <span>決策狀態</span>
-            <select name="decisionStatus"></select>
-          </label>
-          <label>
-            <span>GPA 風險</span>
-            <select name="gpaRisk"></select>
-          </label>
-          <label>
-            <span>是否卡畢業</span>
-            <select name="isBlocking">
-              <option value="">全部</option>
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
-          </label>
-          <label>
-            <span>是否必修</span>
-            <select name="isRequired">
-              <option value="">全部</option>
-              <option value="true">是</option>
-              <option value="false">否</option>
-            </select>
-          </label>
-        </form>
-        <div class="quick-filters">
-          <button type="button" data-preset="unfinished-required">未修必修</button>
-          <button type="button" data-preset="high-risk">高風險課</button>
-          <button type="button" data-preset="candidate">115-1 優先</button>
-          <button type="button" data-preset="backup-candidate">115-1 備選</button>
-          <button type="button" data-preset="prerequisite-blocked">先修未滿</button>
-          <button type="button" data-preset="blocking">卡畢業課</button>
-          <button class="secondary" type="button" data-preset="reset">清除篩選</button>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>課程列表</h2>
-          <p><span id="visibleCount">0</span> / <span id="totalCount">0</span> 門課程</p>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>課名</th>
-                <th>學分</th>
-                <th>類別</th>
-                <th>學分狀態</th>
-                <th>決策狀態</th>
-                <th>GPA</th>
-                <th>延後風險</th>
-                <th>正式課表</th>
-                <th>衝堂</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody id="courseTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>115-1 候選課表</h2>
-          <p>只列下學期真的可能放進課表的課。</p>
-        </div>
-        <div class="table-wrap compact-table">
-          <table>
-            <thead>
-              <tr>
-                <th>課名</th>
-                <th>學分</th>
-                <th>決策狀態</th>
-                <th>預計/可修學期</th>
-                <th>上課時間</th>
-                <th>衝堂對象</th>
-                <th>是否放入正式課表</th>
-              </tr>
-            </thead>
-            <tbody id="candidate1151TableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>衝堂矩陣</h2>
-          <p>只放 115-1 真的可能選到的衝堂組合。</p>
-        </div>
-        <div class="table-wrap compact-table">
-          <table>
-            <thead>
-              <tr>
-                <th>課程 A</th>
-                <th>時間</th>
-                <th>衝堂課程 B</th>
-                <th>時間</th>
-                <th>結論</th>
-              </tr>
-            </thead>
-            <tbody id="conflictMatrixTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>暑假預習表</h2>
-          <p>先讀會影響 115-1 與 115-2 銜接的底層課。</p>
-        </div>
-        <div class="table-wrap compact-table">
-          <table>
-            <thead>
-              <tr>
-                <th>課名</th>
-                <th>是否可能 115-1 修</th>
-                <th>為什麼要讀</th>
-                <th>預習目標</th>
-                <th>每週投入</th>
-              </tr>
-            </thead>
-            <tbody id="summerPrepTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>課程決策器</h2>
-          <p>用必要性與風險分數，把候選課轉成 A/B/C 復學策略。</p>
-        </div>
-        <div id="decisionQuadrantSummary" class="decision-summary-grid" aria-live="polite"></div>
-        <div id="decisionPlanStats" class="decision-plan-grid" aria-live="polite"></div>
-        <div class="table-wrap compact-table">
-          <table>
-            <thead>
-              <tr>
-                <th>課名</th>
-                <th>學分</th>
-                <th>必要性</th>
-                <th>風險</th>
-                <th>四象限</th>
-                <th>建議</th>
-                <th>A案</th>
-                <th>B案</th>
-                <th>C案</th>
-                <th>決策備註</th>
-              </tr>
-            </thead>
-            <tbody id="courseDecisionTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-      <section class="section">
-        <div class="section-heading">
-          <h2>缺口分析</h2>
-        </div>
-        <div id="gapSummary" class="gap-summary" aria-live="polite"></div>
-        <div class="gap-layout">
-          <div class="gap-panel">
-            <h3>分類學分缺口</h3>
-            <div id="categoryGapRows" class="gap-progress-list"></div>
-          </div>
-          <div class="gap-panel gap-panel-wide">
-            <h3>行動清單</h3>
-            <div id="gapActionSections" class="gap-action-grid"></div>
-          </div>
-        </div>
-      </section>
-
-      <section class="section">
-        <div class="section-heading">
-          <h2>匯入 / 匯出工具</h2>
-        </div>
-        <div class="tool-row">
-          <button id="exportJsonButton" type="button">匯出 JSON</button>
-          <button id="exportCsvButton" type="button">匯出 CSV</button>
-          <button id="resetOfficialDefaultsButton" class="secondary" type="button">載入 114 檢核表預設資料</button>
-          <label class="file-label">
-            <span>匯入 JSON</span>
-            <input id="importJsonInput" type="file" accept="application/json,.json">
-          </label>
-        </div>
-        <p id="importExportStatus" class="status-line" aria-live="polite"></p>
-      </section>
-    </main>
-
-    <script src="app.js"></script>
-  </body>
+  <script type="module" src="app.js"></script>
+</body>
 </html>
