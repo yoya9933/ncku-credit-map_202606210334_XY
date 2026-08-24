@@ -226,10 +226,6 @@ function officialCourses(courses, allowedCodes) {
   return courses.filter((course) => allowedCodes.has(course.courseCode));
 }
 
-function capByCredits(courses, maxCredits) {
-  return Math.min(sumRecognized(courses), maxCredits);
-}
-
 function completedGeneral(courses, subarea) {
   return courses.filter(
     (course) =>
@@ -237,6 +233,16 @@ function completedGeneral(courses, subarea) {
       course.generalSubarea === subarea &&
       isCompleted(course) &&
       course.countsTowardGraduation,
+  );
+}
+
+function hasCourseRecord(course) {
+  if (!course) return false;
+  return (
+    isCompleted(course) ||
+    course.status === "重修" ||
+    course.grade !== "" ||
+    (course.semester !== "" && course.semester !== "待排")
   );
 }
 
@@ -338,7 +344,9 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
   const coreAllSatisfied = coreCompletedCount === OFFICIAL_REQUIREMENT_IDS.majorCore.length;
 
   const designCourses = officialCourses(courses, officialDesign);
-  const design = capByCredits(designCourses, requirements.major.design.maxRecognizedCredits);
+  const designRaw = sumRecognized(designCourses);
+  const design = Math.min(designRaw, requirements.major.design.maxRecognizedCredits);
+  const designOverflow = Math.max(designRaw - design, 0);
   const designSatisfied = design >= requirements.major.design.requiredCredits;
   const major = Math.min(core + design, requirements.major.total);
   const majorSatisfied =
@@ -350,10 +358,8 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
   const requiredElectiveCourse = courses.find(
     (course) => course.courseCode === OFFICIAL_REQUIREMENT_IDS.requiredElective,
   );
-  const requiredElective = requiredElectiveCourse ? recognized(requiredElectiveCourse) : 0;
-  const requiredElectiveSatisfied =
-    Boolean(requiredElectiveCourse && isCompleted(requiredElectiveCourse)) &&
-    requiredElective >= requirements.requiredElective.credits;
+  const requiredElectiveEarned = requiredElectiveCourse ? recognized(requiredElectiveCourse) : 0;
+  const requiredElectiveRecordSatisfied = hasCourseRecord(requiredElectiveCourse);
 
   const general = calculateGeneralEducation(courses, requirements.general);
 
@@ -363,11 +369,11 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
       isCompleted(course) &&
       course.countsTowardGraduation,
   );
-  const elective = Math.min(sumRecognized(electiveCompleted), requirements.elective.total);
-  const department = Math.min(
-    sumRecognized(electiveCompleted.filter((course) => course.departmentElective)),
-    requirements.elective.departmentMinimum,
-  );
+  const electiveRaw = sumRecognized(electiveCompleted) + designOverflow;
+  const elective = Math.min(electiveRaw, requirements.elective.total);
+  const departmentRaw =
+    sumRecognized(electiveCompleted.filter((course) => course.departmentElective)) + designOverflow;
+  const department = Math.min(departmentRaw, requirements.elective.departmentMinimum);
   const electiveSatisfied =
     elective >= requirements.elective.total && department >= requirements.elective.departmentMinimum;
 
@@ -380,7 +386,7 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
       : 0;
 
   const totalRecognized = Math.min(
-    major + requiredElective + general.recognized + elective + cross,
+    major + general.recognized + electiveRaw + requiredElectiveEarned + cross,
     requirements.totalCredits,
   );
   const pe = courses.find((course) => course.gateType === "pe");
@@ -413,23 +419,30 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
       coreRequiredCount: OFFICIAL_REQUIREMENT_IDS.majorCore.length,
       coreAllSatisfied,
       design,
+      designRaw,
+      designOverflow,
       designSatisfied,
       satisfied: majorSatisfied,
     },
     requiredElective: {
-      recognized: requiredElective,
+      recognized: requiredElectiveEarned,
       required: requirements.requiredElective.credits,
       courseCode: requirements.requiredElective.courseCode,
-      satisfied: requiredElectiveSatisfied,
+      recordSatisfied: requiredElectiveRecordSatisfied,
+      creditEarned: requiredElectiveEarned >= requirements.requiredElective.credits,
+      satisfied: requiredElectiveRecordSatisfied,
     },
     general,
     elective: {
       recognized: elective,
+      rawRecognized: electiveRaw,
       required: requirements.elective.total,
       remaining: Math.max(requirements.elective.total - elective, 0),
       departmentRecognized: department,
+      departmentRawRecognized: departmentRaw,
       departmentRequired: requirements.elective.departmentMinimum,
       departmentRemaining: Math.max(requirements.elective.departmentMinimum - department, 0),
+      designOverflow,
       satisfied: electiveSatisfied,
     },
     gates,
@@ -437,7 +450,7 @@ export function calculateGraduation(inputCourses, requirements = REQUIREMENTS) {
     graduationReady:
       totalRecognized >= requirements.totalCredits &&
       majorSatisfied &&
-      requiredElectiveSatisfied &&
+      requiredElectiveRecordSatisfied &&
       general.satisfied &&
       electiveSatisfied &&
       gates.pe.satisfied &&
@@ -507,9 +520,7 @@ export function calculateConflicts(inputCourses, currentTerm = APP_CONFIG.curren
           if (slotsConflict(a, b)) overlaps.push({ a, b });
         }),
       );
-      if (overlaps.length) {
-        out.push({ courseA: courses[i], courseB: courses[j], overlaps });
-      }
+      if (overlaps.length) out.push({ courseA: courses[i], courseB: courses[j], overlaps });
     }
   }
   return out;
@@ -712,6 +723,7 @@ export function exportCoursesToCsv(inputCourses) {
     "credits",
     "recognizedCredits",
     "requirementGroup",
+    "generalSubarea",
     "status",
     "semester",
     "grade",
