@@ -55,6 +55,9 @@ const allDesignCompleted = COURSE_CATALOG.filter((course) =>
 ).map((course) => complete(course));
 const majorResult = calculateGraduation([...allCoreCompleted, ...allDesignCompleted]);
 assert.equal(majorResult.major.design, 4);
+assert.equal(majorResult.major.designRaw, 8);
+assert.equal(majorResult.major.designOverflow, 4);
+assert.equal(majorResult.elective.designOverflow, 4);
 assert.equal(majorResult.major.recognized, 75);
 assert.equal(majorResult.major.satisfied, true);
 
@@ -63,7 +66,25 @@ const withoutIntro = calculateGraduation([...allCoreCompleted, ...allDesignCompl
 assert.equal(withoutIntro.requiredElective.satisfied, false);
 const withIntro = calculateGraduation([...allCoreCompleted, ...allDesignCompleted, complete(intro)]);
 assert.equal(withIntro.requiredElective.satisfied, true);
+assert.equal(withIntro.requiredElective.recordSatisfied, true);
+assert.equal(withIntro.requiredElective.creditEarned, true);
 assert.equal(withIntro.requiredElective.recognized, 1);
+
+const failedIntroRecord = normalizeCourse({
+  ...intro,
+  status: "重修",
+  grade: "45",
+  semester: "115-1",
+});
+const failedIntroResult = calculateGraduation([
+  ...allCoreCompleted,
+  ...allDesignCompleted,
+  failedIntroRecord,
+]);
+assert.equal(failedIntroResult.requiredElective.recordSatisfied, true);
+assert.equal(failedIntroResult.requiredElective.creditEarned, false);
+assert.equal(failedIntroResult.requiredElective.recognized, 0);
+assert.equal(failedIntroResult.requiredElective.satisfied, true);
 
 const general = (id, credits, subarea) =>
   complete({
