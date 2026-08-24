@@ -15,16 +15,17 @@ export default [
         localStorage: "readonly",
         document: "readonly",
         window: "readonly",
+        location: "readonly",
         confirm: "readonly",
         fetch: "readonly",
         console: "readonly",
         process: "readonly",
-        setTimeout: "readonly",
-      },
+        setTimeout: "readonly"
+      }
     },
     rules: {
       eqeqeq: ["error", "always"],
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
       "prefer-const": "error"
     }
   }
