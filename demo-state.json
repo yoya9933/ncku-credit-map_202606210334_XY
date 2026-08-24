@@ -1,0 +1,28 @@
+{
+  "version": 2,
+  "config": {
+    "currentTerm": "115-1",
+    "nextTerm": "115-2"
+  },
+  "courses": [
+    {"courseCode":"CALC-1","courseName":"微積分（一）","status":"已修","grade":"82"},
+    {"courseCode":"CALC-2","courseName":"微積分（二）","status":"已修","grade":"78"},
+    {"courseCode":"PHYS-1","courseName":"普通物理學（一）","status":"已修","grade":"72"},
+    {"courseCode":"PHYS-LAB-1","courseName":"普通物理學實驗（一）","status":"已修","grade":"88"},
+    {"courseCode":"ENG-MECH","courseName":"工程力學","status":"已修","grade":"75"},
+    {"courseCode":"GEOLOGY","courseName":"工程地質學","status":"候選","decision":"backup","expectedGrade":"82"},
+    {"courseCode":"FLUID-1","courseName":"流體力學（一）","status":"候選","decision":"priority","expectedGrade":"76"},
+    {"courseCode":"WATER-1","courseName":"水資源工程（一）","status":"候選","decision":"priority","expectedGrade":"84"},
+    {"courseCode":"MATERIAL","courseName":"材料力學","status":"候選","decision":"backup","expectedGrade":"80"},
+    {"courseCode":"OPEN-CHANNEL","courseName":"明渠水力學","status":"候選","decision":"backup","expectedGrade":"74"},
+    {"courseCode":"WAVE","courseName":"波浪力學","status":"候選","decision":"backup","expectedGrade":"77"},
+    {"courseCode":"HOE-INTRO","courseName":"水利及海洋工程概論","status":"候選","decision":"priority","expectedGrade":"90"},
+    {"courseCode":"DESIGN-OCEAN","courseName":"海洋工程設計","status":"候選","decision":"backup","expectedGrade":"85"},
+    {"courseCode":"ENG-FOREIGN","courseName":"外國語言（英文）","status":"已修","grade":"86"},
+    {"courseCode":"CHINESE-1","courseName":"大學國文（一）","status":"已修","grade":"84"},
+    {"courseCode":"CHINESE-2","courseName":"大學國文（二）","status":"已修","grade":"80"},
+    {"courseCode":"GEN-PHYS","courseName":"應用物理與實驗","status":"已修","grade":"88"},
+    {"courseCode":"GATE-PE","courseName":"體育（必修四學期）","gateProgress":3},
+    {"courseCode":"GATE-ENGLISH","courseName":"英語畢業門檻","status":"已修"}
+  ]
+}
