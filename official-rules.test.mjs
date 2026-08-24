@@ -119,14 +119,16 @@ assert.equal(onlyTwoDomains.recognized, 28);
 assert.equal(onlyTwoDomains.rules.domain.distinctAreas, 2);
 assert.equal(onlyTwoDomains.satisfied, false, "28 credits alone must not bypass the three-domain rule");
 
-const physics = complete({
-  id: "PHYS-1",
-  courseCode: "PHYS-1",
-  courseName: "普通物理學（一）",
-  credits: 3,
-  requirementGroup: "major-core",
-  grade: "F",
-});
+const physics = complete(
+  {
+    id: "PHYS-1",
+    courseCode: "PHYS-1",
+    courseName: "普通物理學（一）",
+    credits: 3,
+    requirementGroup: "major-core",
+  },
+  { grade: "F" },
+);
 const engineeringMechanics = normalizeCourse(
   COURSE_CATALOG.find((course) => course.courseCode === "ENG-MECH"),
 );
