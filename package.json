@@ -1,11 +1,19 @@
 {
   "name": "ncku-credit-map",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node credit-map-v2.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs",
-    "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js",
-    "verify": "npm run check && npm test"
+    "test": "node credit-map-v2.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs && node accessibility.test.mjs",
+    "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js && node --check quality-ui.js",
+    "lint": "eslint .",
+    "format": "prettier --write index.html demo.html 404.html accessibility.test.mjs quality-ui.js eslint.config.js package.json .github/workflows/*.yml README.md docs/*.md",
+    "format:check": "prettier --check index.html demo.html 404.html accessibility.test.mjs quality-ui.js eslint.config.js package.json .github/workflows/*.yml README.md docs/*.md",
+    "verify": "npm run check && npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.34.0",
+    "eslint": "^9.34.0",
+    "prettier": "^3.6.2"
   }
 }
