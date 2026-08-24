@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NCKU Credit Map">
+  <rect width="64" height="64" rx="14" fill="#19352f"/>
+  <path d="M14 20h36v8H14zm0 16h23v8H14z" fill="#f1ce82"/>
+  <circle cx="48" cy="40" r="7" fill="#fff"/>
+  <path d="M48 35v10M43 40h10" stroke="#176b56" stroke-width="3" stroke-linecap="round"/>
+</svg>
