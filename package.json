@@ -1,0 +1,11 @@
+{
+  "name": "ncku-credit-map",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node credit-map-v2.test.mjs",
+    "check": "node --check app-core.js && node --check app-ui.js && node --check curriculum.js",
+    "verify": "npm run check && npm test"
+  }
+}
