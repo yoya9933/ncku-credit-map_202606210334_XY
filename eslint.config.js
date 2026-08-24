@@ -1,0 +1,31 @@
+import js from "@eslint/js";
+
+export default [
+  { ignores: ["_site/**", "node_modules/**"] },
+  js.configs.recommended,
+  {
+    files: ["**/*.js", "**/*.mjs"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        Blob: "readonly",
+        URL: "readonly",
+        FileReader: "readonly",
+        localStorage: "readonly",
+        document: "readonly",
+        window: "readonly",
+        confirm: "readonly",
+        fetch: "readonly",
+        console: "readonly",
+        process: "readonly",
+        setTimeout: "readonly",
+      },
+    },
+    rules: {
+      eqeqeq: ["error", "always"],
+      "no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "prefer-const": "error"
+    }
+  }
+];
