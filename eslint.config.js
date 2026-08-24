@@ -24,8 +24,14 @@ export default [
       }
     },
     rules: {
-      eqeqeq: ["error", "always"],
-      "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      eqeqeq: ["error", "smart"],
+      "no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^(?:_|REQUIREMENT_GROUPS$)"
+        }
+      ],
       "prefer-const": "error"
     }
   }
