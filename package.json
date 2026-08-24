@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node credit-map-v2.test.mjs && node official-rules.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs && node accessibility.test.mjs && node quality.test.mjs",
+    "test": "node credit-map-v2.test.mjs && node official-rules.test.mjs && node official-graduation-e2e.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs && node accessibility.test.mjs && node quality.test.mjs",
     "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js && node --check quality-ui.js",
     "lint": "eslint .",
     "format": "prettier --write \"*.{js,mjs,json,md,html}\" \".github/workflows/*.yml\"",
