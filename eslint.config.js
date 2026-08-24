@@ -20,19 +20,19 @@ export default [
         fetch: "readonly",
         console: "readonly",
         process: "readonly",
-        setTimeout: "readonly"
-      }
+        setTimeout: "readonly",
+      },
     },
     rules: {
       eqeqeq: ["error", "smart"],
       "no-unused-vars": [
         "error",
         {
-          "argsIgnorePattern": "^_",
-          "varsIgnorePattern": "^(?:_|REQUIREMENT_GROUPS$)"
-        }
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^(?:_|REQUIREMENT_GROUPS$)",
+        },
       ],
-      "prefer-const": "error"
-    }
-  }
+      "prefer-const": "error",
+    },
+  },
 ];
