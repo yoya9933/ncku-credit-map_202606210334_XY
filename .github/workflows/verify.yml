@@ -2,7 +2,7 @@ name: verify
 
 on:
   push:
-    branches: [main, p0-p1-rule-engine-hardening]
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -17,4 +17,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+      - run: npm install --no-audit --no-fund
       - run: npm run verify
