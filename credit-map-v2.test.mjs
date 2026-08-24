@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   APP_CONFIG,
+  COURSE_CATALOG,
   PLAN_CONFIG,
   REQUIREMENTS,
   calculateConflicts,
@@ -19,6 +20,10 @@ import {
 } from "./app-core.js";
 
 const complete = (course, extra = {}) => normalizeCourse({ ...course, status: "已修", ...extra });
+
+const professionalCore = COURSE_CATALOG.filter((course) => course.requirementGroup === "major-core");
+assert.equal(professionalCore.length, 30);
+assert.equal(professionalCore.reduce((sum, course) => sum + course.credits, 0), REQUIREMENTS.major.core);
 
 const designOverflow = [
   complete({ courseCode: "DESIGN-FLOOD", courseName: "防洪排水工程設計", credits: 2, requirementGroup: "major-design" }),
@@ -69,7 +74,9 @@ const physics = normalizeCourse({ courseCode: "PHYS-1", courseName: "普通物�
 const fluid = normalizeCourse({ courseCode: "FLUID-1", courseName: "流體力學（一）", credits: 3, requirementGroup: "major-core", prerequisites: [{ courseCode: "PHYS-1", minimumGrade: 45 }] });
 assert.equal(getEligibility(fluid, [physics, fluid]).eligible, false);
 assert.equal(getEligibility(fluid, [complete(physics, { grade: "50" }), fluid]).eligible, true);
+assert.equal(getEligibility(fluid, [complete(physics, { grade: "" }), fluid]).eligible, true);
 assert.equal(getEligibility(fluid, [normalizeCourse({ ...physics, status: "已抵免" }), fluid]).eligible, true);
+assert.equal(getEligibility(fluid, [complete(physics, { grade: "40" }), fluid]).eligible, false);
 
 const a = normalizeCourse({ id: "a", courseName: "A", credits: 3, requirementGroup: "major-core", term: APP_CONFIG.currentTerm, slots: [{ day: 1, start: 7, end: 8 }] });
 const b = normalizeCourse({ id: "b", courseName: "B", credits: 3, requirementGroup: "major-core", term: APP_CONFIG.currentTerm, slots: [{ day: 1, start: 8, end: 9 }] });
