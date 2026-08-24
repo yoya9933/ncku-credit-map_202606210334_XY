@@ -1,11 +1,19 @@
 {
   "name": "ncku-credit-map",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node credit-map-v2.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs",
-    "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js",
-    "verify": "npm run check && npm test"
+    "test": "node credit-map-v2.test.mjs && node auto-planner.test.mjs && node demo-state.test.mjs && node accessibility.test.mjs && node quality.test.mjs",
+    "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js && node --check quality-ui.js",
+    "lint": "eslint .",
+    "format": "prettier --write \"*.{js,mjs,json,md,html}\" \".github/workflows/*.yml\"",
+    "format:check": "prettier --check package.json eslint.config.js .prettierrc.json quality-ui.js quality.test.mjs",
+    "verify": "npm run check && npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "eslint": "10.9.0",
+    "prettier": "3.9.6"
   }
 }

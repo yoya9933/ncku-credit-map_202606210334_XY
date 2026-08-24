@@ -4,28 +4,54 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
+  <meta name="description" content="NCKU Credit Map 是成大水利及海洋工程學系的規則式學分規劃與畢業決策支援工具。">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="NCKU Credit Map">
+  <meta property="og:description" content="Graduation rule engine, prerequisite graph, conflict detection, GPA simulation and constraint-based course planning.">
+  <meta property="og:url" content="https://yoya9933.github.io/ncku-credit-map_202606210334_XY/">
+  <meta property="og:image" content="https://yoya9933.github.io/ncku-credit-map_202606210334_XY/favicon.svg">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="NCKU Credit Map">
+  <meta name="twitter:description" content="Rule-based academic planning and graduation decision-support system.">
   <title>NCKU Credit Map</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body aria-busy="true">
+  <a class="skip-link" href="#main-content">跳到主要內容</a>
+  <div id="appLoading" class="app-loading" role="status" aria-live="polite">
+    <span class="loading-dot" aria-hidden="true"></span>
+    正在載入學分地圖…
+  </div>
+  <p id="fatalStatus" class="fatal-status" role="alert" hidden></p>
+
   <header class="site-header">
     <div class="page-shell">
-      <p class="eyebrow">NCKU Credit Map v0.4</p>
+      <p class="eyebrow">NCKU Credit Map v1.1</p>
       <h1>學分地圖</h1>
       <p class="header-note">畢業規則、先修、衝堂、自動排課、修課方案與 GPA 模擬集中在同一個本機工具。</p>
     </div>
   </header>
 
-  <main class="page-shell">
-    <section class="section">
-      <div class="section-heading"><div><h2>畢業進度</h2><p>114 學年度規則；「修過」與「可認列」分開計算。</p></div><button id="undoButton" class="secondary" type="button">復原上一步</button></div>
-      <div id="dashboard" class="dashboard-grid"></div>
+  <main id="main-content" class="page-shell" tabindex="-1">
+    <section class="section print-graduation" aria-labelledby="graduation-heading">
+      <div class="section-heading">
+        <div>
+          <h2 id="graduation-heading">畢業進度</h2>
+          <p>114 學年度規則；「修過」與「可認列」分開計算。</p>
+        </div>
+        <div class="heading-actions no-print">
+          <button id="printProgress" class="secondary" type="button">列印畢業進度</button>
+          <button id="undoButton" class="secondary" type="button">復原上一步</button>
+        </div>
+      </div>
+      <div id="dashboard" class="dashboard-grid" aria-live="polite"></div>
       <ul id="ruleSummary" class="analysis-block"></ul>
       <p id="snapshotStatus" class="muted"></p>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>目前學期規劃</h2><p>候選課先檢查先修，再做衝堂與 A/B/C 方案判斷。</p></div></div>
+    <section class="section" aria-labelledby="term-planning-heading">
+      <div class="section-heading"><div><h2 id="term-planning-heading">目前學期規劃</h2><p>候選課先檢查先修，再做衝堂與 A/B/C 方案判斷。</p></div></div>
       <div class="planner-grid">
         <div>
           <h3>候選課</h3>
@@ -36,8 +62,8 @@
       <div id="plans" class="decision-plan-grid"></div>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>自動排課器</h2><p>從本學期已滿足先修的課程中搜尋組合，自動排除衝堂並控制風險。</p></div><button id="runAutoPlanner" type="button">重新產生</button></div>
+    <section class="section" aria-labelledby="auto-planner-heading">
+      <div class="section-heading"><div><h2 id="auto-planner-heading">自動排課器</h2><p>從本學期已滿足先修的課程中搜尋組合，自動排除衝堂並控制風險。</p></div><button id="runAutoPlanner" type="button">重新產生</button></div>
       <div class="grid-form">
         <label><span>最低學分</span><input id="autoMinCredits" type="number" min="0" value="12"></label>
         <label><span>目標學分</span><input id="autoTargetCredits" type="number" min="0" value="15"></label>
@@ -45,26 +71,26 @@
         <label><span>最高平均風險</span><input id="autoMaxRisk" type="number" min="1" max="5" step="0.1" value="3.5"></label>
         <label><span>最多高風險課</span><input id="autoHighRisk" type="number" min="0" max="10" value="2"></label>
       </div>
-      <p id="autoPlanStatus" class="muted"></p>
+      <p id="autoPlanStatus" class="muted" aria-live="polite"></p>
       <div id="autoPlanResults" class="decision-plan-grid"></div>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>先修依賴鏈</h2><p>簡易 Dependency Graph：優先看「修完後會解鎖哪些課」。</p></div></div>
+    <section class="section" aria-labelledby="dependency-heading">
+      <div class="section-heading"><div><h2 id="dependency-heading">先修依賴鏈</h2><p>簡易 Dependency Graph：優先看「修完後會解鎖哪些課」。</p></div></div>
       <ul id="dependencyList" class="dependency-list"></ul>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>GPA 模擬</h2><p>採成大 4.3 積分對照；在課程表「預估」欄填百分制成績。</p></div></div>
+    <section class="section" aria-labelledby="gpa-heading">
+      <div class="section-heading"><div><h2 id="gpa-heading">GPA 模擬</h2><p>採成大 4.3 積分對照；在課程表「預估」欄填百分制成績。</p></div></div>
       <div class="gpa-grid">
         <label><span>目前累積 GPA</span><input id="currentGpa" type="number" min="0" max="4.3" step="0.01" placeholder="例如 3.20"></label>
         <label><span>目前已計 GPA 學分</span><input id="currentGpaCredits" type="number" min="0" step="1" placeholder="例如 40"></label>
-        <div class="panel"><strong>模擬結果</strong><p id="gpaResult" class="muted"></p></div>
+        <div class="panel"><strong>模擬結果</strong><p id="gpaResult" class="muted" aria-live="polite"></p></div>
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>課程資料</h2><p>完整 CRUD；正式課號、教師、教室、學期與先修可在編輯器中調整。</p></div><button id="addCourse" type="button">新增課程</button></div>
+    <section class="section" aria-labelledby="course-data-heading">
+      <div class="section-heading"><div><h2 id="course-data-heading">課程資料</h2><p>完整 CRUD；正式課號、教師、教室、學期與先修可在編輯器中調整。</p></div><button id="addCourse" type="button">新增課程</button></div>
       <div class="course-toolbar"><label class="search-field"><span>搜尋</span><input id="courseSearch" type="search" placeholder="課名、內部代碼、正式課號"></label></div>
       <div class="table-wrap responsive-table course-table-wrap">
         <table class="course-table">
@@ -74,8 +100,8 @@
       </div>
     </section>
 
-    <section class="section">
-      <div class="section-heading"><div><h2>備份與匯入</h2><p>JSON 適合完整備份；CSV 可與試算表互通並合併回課程表。</p></div></div>
+    <section class="section" aria-labelledby="backup-heading">
+      <div class="section-heading"><div><h2 id="backup-heading">備份與匯入</h2><p>JSON 適合完整備份；CSV 可與試算表互通並合併回課程表。</p></div></div>
       <div class="tool-row">
         <button id="exportJson" type="button">匯出 JSON</button>
         <button id="exportCsv" type="button">匯出 CSV</button>
@@ -87,7 +113,7 @@
     </section>
   </main>
 
-  <dialog id="courseDialog" class="course-dialog">
+  <dialog id="courseDialog" class="course-dialog" aria-labelledby="courseDialogTitle">
     <form id="courseForm" method="dialog">
       <div class="dialog-heading"><h2 id="courseDialogTitle">新增課程</h2><button id="cancelCourseEdit" class="secondary compact" type="button">關閉</button></div>
       <input name="id" type="hidden">
@@ -109,11 +135,12 @@
         <label class="checkbox-label"><input name="departmentElective" type="checkbox"><span>本系選修</span></label>
         <label class="checkbox-label"><input name="countsTowardGraduation" type="checkbox"><span>計入畢業</span></label>
       </div>
-      <div class="form-actions"><button type="submit">儲存課程</button><button id="cancelCourseEdit2" class="secondary" type="button" onclick="document.getElementById('courseDialog').close()">取消</button></div>
+      <div class="form-actions"><button type="submit">儲存課程</button><button id="cancelCourseEdit2" class="secondary" type="button">取消</button></div>
     </form>
   </dialog>
 
   <script type="module" src="app-ui.js"></script>
   <script type="module" src="auto-planner-ui.js"></script>
+  <script type="module" src="quality-ui.js"></script>
 </body>
 </html>
