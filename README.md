@@ -1,53 +1,81 @@
 # NCKU Credit Map
 
+[![verify](https://github.com/yoya9933/ncku-credit-map_202606210334_XY/actions/workflows/verify.yml/badge.svg)](https://github.com/yoya9933/ncku-credit-map_202606210334_XY/actions/workflows/verify.yml)
+
 Rule-based academic planning and graduation decision-support system for NCKU Hydraulic and Ocean Engineering.
 
-## v0.3 features
+**Portfolio demo:** https://yoya9933.github.io/ncku-credit-map_202606210334_XY/demo.html
+
+## Why this project exists
+
+Degree planning is not only about adding credits. A feasible semester also depends on recognition caps, department-elective minimums, prerequisites, timetable conflicts, GPA risk and course-load limits. This project turns those interacting rules into explicit, testable decisions.
+
+## Core capabilities
+
 - Graduation recognition engine for the 114-entry rule set.
-- 71-credit professional-required catalog + 4-credit design cap + 1-credit required elective.
-- General-education recognition cap and department-elective minimum tracking.
-- Structured prerequisite eligibility and automatic schedule conflict detection.
-- A/B/C course-load validation.
-- Full course CRUD and search.
-- JSON backup plus CSV import/export.
-- Five LocalStorage undo snapshots.
-- Simple prerequisite dependency-chain view.
+- 71-credit professional-required catalog, design-credit cap and required-elective tracking.
+- General-education recognition caps and department-elective minimum tracking.
+- Structured prerequisite eligibility and automatic timetable conflict detection.
+- A/B/C plan validation.
+- Automatic constraint-based current-term planner with explainable ranking.
 - NCKU 4.3 GPA projection from expected percentage grades.
-- Responsive mobile card UI.
+- Full local course CRUD, search, JSON backup and CSV import/export.
+- Five-step LocalStorage undo snapshots.
+- Responsive mobile UI.
+- Sanitized one-click portfolio demo with no personal transcript data committed.
 
-## Run
-No build step is required. Serve the repository as static files, or open it through a local static server.
+## Automatic planner
 
-Verification:
+A schedule is rejected if it violates configured credit limits, prerequisite eligibility, timetable conflicts, average-risk limits or high-risk-course limits. Valid schedules are ranked using course necessity, explicit user decision priority, downstream prerequisite unlock value and closeness to the requested target load.
+
+The recommendation remains explainable: the UI shows the selected credits, high-necessity courses, risk count and downstream unlock value before the user applies it to plan A/B/C.
+
+## Architecture
+
+```text
+curriculum.js        stable curriculum facts + verified official codes
+term-data.js         semester-specific offerings / teachers / rooms / slots
+app-core.js          graduation rules, prerequisites, conflicts, GPA, imports
+auto-planner.js      deterministic constraint search and plan ranking
+app-ui.js            LocalStorage, snapshots, CRUD and rendering
+auto-planner-ui.js   planner controls and recommendation application
+index.html           application shell
+demo.html            sanitized portfolio-demo bootstrap
+demo-state.json      non-personal demo overrides
+```
+
+Detailed architecture: [`docs/architecture.md`](docs/architecture.md)
+
+Portfolio case study: [`docs/case-study.md`](docs/case-study.md)
+
+## Privacy model
+
+The repository contains sanitized curriculum/demo data only. Personal grades, completed-course states, recognition decisions and schedules belong in browser LocalStorage or ignored local export folders. `courseCode` is a stable application identifier; `officialCourseCode` is separate and only populated when independently verified.
+
+## Verification
 
 ```bash
 npm run verify
 ```
 
-## Architecture
-```text
-curriculum.js       stable curriculum facts + verified official codes
-term-data.js        semester-specific teachers / rooms / time slots
-app-core.js         pure rules, planning, imports, GPA, validation
-app-ui.js           LocalStorage, snapshots, CRUD, rendering
-index.html          application shell
-style.css           responsive UI
-credit-map-v2.test.mjs
-.github/workflows/verify.yml
-```
+The regression suite covers graduation caps, migration, prerequisite thresholds, timetable conflicts, CRUD integrity, CSV safety, GPA conversion, auto-planner constraints and sanitized demo loading.
 
-`courseCode` is an internal stable identifier. `officialCourseCode` is separate and is only populated when independently verified. Future offering information can be marked estimated rather than presented as confirmed.
+## Run locally
 
-## Privacy model
-The repository contains sanitized curriculum/demo data only. Personal grades, completed-course states, credit recognition and schedules should remain in browser LocalStorage or ignored local export folders. Do not commit personal transcript data.
+No build step is required. Serve the repository as static files with any local HTTP server and open `index.html`. Open `demo.html` to load the sanitized portfolio state.
 
-## Authoritative references
-Curriculum requirements are based on the NCKU Hydraulic and Ocean Engineering 114-entry required-course table and graduation-credit checklist. Official course codes are cross-checked against the department undergraduate-course page. GPA conversion follows the NCKU Registrar's post-2015 4.3 grade-point table.
+## Deployment
 
-Because course offerings, teachers, rooms and registration rules can change by semester, verify them against NCKU's official course query before registration.
+`.github/workflows/pages.yml` publishes the static site through GitHub Pages after pushes to `main`. If Pages has never been enabled for the repository, GitHub may require selecting **GitHub Actions** once under **Settings → Pages → Build and deployment**.
 
-## Current limits
-- No authenticated SIS integration.
-- No automatic course registration.
-- No full constraint-solver auto-scheduler yet.
-- Some official course codes remain intentionally blank when the current source does not unambiguously identify the 114-entry version.
+## Data trust boundary
+
+Curriculum requirements are based on the NCKU Hydraulic and Ocean Engineering 114-entry required-course table and graduation-credit checklist. GPA conversion follows NCKU's 4.3 grade-point table. Semester offerings, teachers, rooms and registration conditions can change and must be verified against the official NCKU course query before registration.
+
+## Version
+
+`1.0.0` portfolio release candidate. See [`CHANGELOG.md`](CHANGELOG.md).
+
+## License
+
+MIT License.
