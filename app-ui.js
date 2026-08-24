@@ -147,14 +147,14 @@ function renderDashboard() {
   const generalRules = g.general.rules;
   const rules = [
     `正式專業必修 ${g.major.core}/${REQUIREMENTS.major.core} 學分（${g.major.coreCompletedCount}/${g.major.coreRequiredCount} 門）`,
-    `設計必修 ${g.major.design}/${REQUIREMENTS.major.design.requiredCredits} 學分`,
-    `水利及海洋工程概論 ${g.requiredElective.recognized}/${g.requiredElective.required} 學分：${yesNo(g.requiredElective.satisfied)}`,
+    `設計必修 ${g.major.design}/${REQUIREMENTS.major.design.requiredCredits} 學分${g.major.designOverflow ? `；另有 ${g.major.designOverflow} 學分移入選修` : ""}`,
+    `水利及海洋工程概論修課紀錄：${yesNo(g.requiredElective.recordSatisfied)}；取得學分 ${g.requiredElective.recognized}/${g.requiredElective.required}`,
     `語文通識 ${generalRules.language.recognized}/${generalRules.language.required}（中文 ${generalRules.language.chinese}/${generalRules.language.chineseRequired}、外文 ${generalRules.language.foreign}/${generalRules.language.foreignRequired}）`,
     `踏溯台南 ${generalRules.tainan.recognized}/${generalRules.tainan.required} 學分`,
     `領域通識 ${generalRules.domain.recognized} 學分；涵蓋 ${generalRules.domain.distinctAreas}/${generalRules.domain.requiredDistinctAreas} 領域；自然與工程科學認列 ${generalRules.domain.naturalEngineeringRecognizedCourses}/${generalRules.domain.naturalEngineeringRawCourses} 門`,
     `融合通識 ${generalRules.fusion.recognized}/${generalRules.fusion.minimum} 學分`,
     `體育 ${g.gates.pe.completed}/${g.gates.pe.required} 學期`,
-    `英語門檻 ${g.gates.english.required}：${yesNo(g.gates.english.satisfied)}`,
+    `英語畢業門檻（B2 或補強英文）：${yesNo(g.gates.english.satisfied)}`,
     `自動畢業檢核：${g.graduationReady ? "全部自動規則已滿足" : "仍有自動規則未滿足"}`,
     ...g.manualChecks.map((text) => `人工確認：${text}`),
   ];
@@ -257,10 +257,13 @@ function renderCourses() {
   courses.forEach((course) => {
     const tr = document.createElement("tr");
     tr.dataset.id = course.id;
+    const groupLabel = course.generalSubarea
+      ? `${course.requirementGroup}\n${course.generalSubarea}`
+      : course.requirementGroup;
     const staticCells = [
       ["課程", `${course.courseName}${course.officialCourseCode ? `\n${course.officialCourseCode}` : ""}`],
       ["認列/學分", `${course.recognizedCredits}/${course.credits}`],
-      ["群組", course.requirementGroup],
+      ["群組", groupLabel],
     ];
     staticCells.forEach(([label, value]) => {
       const td = el("td", value);
@@ -428,6 +431,7 @@ function openEditor(course = null) {
   form.elements.credits.value = c?.credits ?? 0;
   form.elements.recognizedCredits.value = c?.recognizedCredits ?? 0;
   form.elements.requirementGroup.value = c?.requirementGroup || "elective";
+  form.elements.generalSubarea.value = c?.generalSubarea || "";
   form.elements.status.value = c?.status || "未修";
   form.elements.grade.value = c?.grade || "";
   form.elements.expectedGrade.value = c?.expectedGrade || "";
@@ -455,6 +459,7 @@ function submitEditor(event) {
     credits: Number(f.credits.value),
     recognizedCredits: Number(f.recognizedCredits.value),
     requirementGroup: f.requirementGroup.value,
+    generalSubarea: f.generalSubarea.value,
     status: f.status.value,
     grade: f.grade.value.trim(),
     expectedGrade: f.expectedGrade.value.trim(),
