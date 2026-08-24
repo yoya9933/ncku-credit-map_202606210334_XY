@@ -1,0 +1,20 @@
+# Local/private academic data
+private/
+backups/
+exports/
+*.local.json
+*.backup.json
+*.private.csv
+
+# Environment / editor / OS
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node tooling
+node_modules/
+npm-debug.log*

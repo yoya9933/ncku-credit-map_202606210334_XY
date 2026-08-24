@@ -1,78 +1,12 @@
-# SOP
+# Development SOP — v0.3
 
-## Demo 前檢查
-
-1. 用瀏覽器開啟 `index.html`。
-2. 確認 Dashboard 有顯示統計數字。
-3. 檢查課程列表可以展開詳細資料。
-4. 測試快速篩選，例如未修必修、高風險課、115-1 優先。
-5. 檢查缺口分析是否有顯示分類進度與行動清單。
-6. 如果要展示 115-1 規劃，確認候選課表、衝堂矩陣、暑假預習表都有內容。
-
-## 備份資料
-
-1. 開啟 `index.html`。
-2. 到「匯入 / 匯出工具」。
-3. 點「匯出 JSON」。
-4. 保存 `ncku-credit-map-backup.json`。
-5. 若要放入 Git，先確認內容不含姓名、學號、成績細節、私人課表或不想公開的紀錄。
-
-## 匯入資料
-
-1. 開啟 `index.html`。
-2. 到「匯入 / 匯出工具」。
-3. 使用「匯入 JSON」選擇先前匯出的備份。
-4. 匯入後檢查 Dashboard、課程列表、缺口分析是否符合預期。
-
-## 匯出 CSV
-
-1. 開啟 `index.html`。
-2. 到「匯入 / 匯出工具」。
-3. 點「匯出 CSV」。
-4. 用 Excel 或 Google Sheets 開啟。
-5. 若 CSV 要分享或提交，先檢查是否包含個人資料。
-
-## 重置預設資料
-
-1. 先匯出 JSON 備份。
-2. 點「載入 114 檢核表預設資料」。
-3. 確認瀏覽器跳出的確認訊息。
-4. 重置後檢查目前資料是否已回到預設狀態。
-
-## 修改功能後驗證
-
-每次修改 `app.js` 的資料模型、計算邏輯、匯出格式或重要 UI 流程後，至少執行：
-
-```powershell
-node .\credit-map.test.mjs
-node --check .\app.js
-```
-
-若修改 `index.html` 的表格欄位或主要區塊，確認測試是否需要同步調整。
-
-## Git 前檢查
-
-提交前檢查：
-
-- 不提交完整聊天逐字稿。
-- 不提交姓名、學號、成績細節、完整個人課表、抵免紀錄或私人下載路徑。
-- 若有 JSON 備份，確認內容已去識別化。
-- 確認 `PROJECT_MEMORY/` 與 `docs/` 只保存整理後的專案知識。
-
-建議提交前執行：
-
-```powershell
-git status --short
-node .\credit-map.test.mjs
-node --check .\app.js
-```
-
-## 課程決策器 Demo 流程
-
-1. 開啟 `index.html`。
-2. 在新增 / 編輯課程表單設定必要性分數、風險分數與決策備註。
-3. 勾選 A 案、B 案、C 案的初始方案歸屬。
-4. 到「課程決策器」區塊查看四象限分類與建議等級。
-5. 直接在總表快速調整 A/B/C 勾選。
-6. 檢查三案統計是否符合復學負荷限制。
-7. 需要外部檢查時匯出 CSV；需要備份時匯出 JSON。
+1. Change stable curriculum facts only in `curriculum.js`.
+2. Change semester-specific teacher/room/time data only in `term-data.js`.
+3. Do not invent official course codes or future schedules; blank/estimated is acceptable.
+4. Put reusable calculations in `app-core.js`; keep DOM and LocalStorage in `app-ui.js`.
+5. Add a regression test for every graduation-rule, import, migration, prerequisite, conflict or GPA change.
+6. Run `npm run verify` before merge.
+7. Never commit personal transcript/grade/credit-recognition data. Use LocalStorage or ignored `private/`, `backups/`, `exports/` paths.
+8. Keep public defaults sanitized.
+9. Use a feature branch and PR for non-trivial changes.
+10. After structural changes, update `PROJECT_BRIEF.md`, `TECH_STACK.md` and README in the same PR.
