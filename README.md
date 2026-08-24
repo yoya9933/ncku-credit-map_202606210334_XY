@@ -1,148 +1,53 @@
 # NCKU Credit Map
 
-一個純前端、可離線使用的成大水利學分與修課決策工具。
+Rule-based academic planning and graduation decision-support system for NCKU Hydraulic and Ocean Engineering.
 
-這個 repo 的公開資料只保存 **114 學年度課程規則與去識別化課程目錄**，不再把任何個人的抵免、成績、已修狀態或私人課表寫進 Git。個人狀態只存在瀏覽器 LocalStorage，並可自行匯出 JSON 備份。
+## v0.3 features
+- Graduation recognition engine for the 114-entry rule set.
+- 71-credit professional-required catalog + 4-credit design cap + 1-credit required elective.
+- General-education recognition cap and department-elective minimum tracking.
+- Structured prerequisite eligibility and automatic schedule conflict detection.
+- A/B/C course-load validation.
+- Full course CRUD and search.
+- JSON backup plus CSV import/export.
+- Five LocalStorage undo snapshots.
+- Simple prerequisite dependency-chain view.
+- NCKU 4.3 GPA projection from expected percentage grades.
+- Responsive mobile card UI.
 
-## 核心原則
+## Run
+No build step is required. Serve the repository as static files, or open it through a local static server.
 
-這一版不再把「修過」直接等同「可計入畢業」。學分會先經過規則引擎認列：
-
-- 畢業總學分：135
-- 水利必修：76
-  - 專業必修：71
-  - 設計必修：4（四選二；超修不重複灌入必修）
-  - 必選修：1（水利及海洋工程概論）
-- 通識：28
-  - 自然與工程科學相關認列上限由規則引擎控制
-- 選修：31
-  - 本系選修至少 10
-- 非學分畢業條件另外追蹤，例如體育學期數與英語門檻
-
-## P0 / P1 hardening
-
-### Graduation rule engine
-
-課程資料新增並使用：
-
-- `requirementGroup`
-- `countsTowardGraduation`
-- `recognizedCredits`
-- `departmentElective`
-- `generalSubarea`
-
-主 Dashboard、缺口與畢業判斷不再只靠 `category` 加總。
-
-### Term config
-
-目前學期與下一學期集中在 `curriculum.js`：
-
-```js
-APP_CONFIG.currentTerm
-APP_CONFIG.nextTerm
-```
-
-UI 與候選課邏輯不再散落寫死 `115-1` / `115-2`。
-
-### Prerequisite engine
-
-先修條件使用結構化資料：
-
-```js
-prerequisites: [
-  { courseCode: "PHYS-1", minimumGrade: 45 }
-]
-```
-
-資格由完成狀態與最低成績推導，不再依賴人工填寫「先修未滿」。
-
-### Conflict engine
-
-上課時間使用結構化 slots：
-
-```js
-slots: [
-  { day: 1, start: 7, end: 8 }
-]
-```
-
-衝堂由時段交集自動計算，不再維護人工 `CONFLICT_MATRIX`。
-
-### A / B / C plans
-
-方案有效性會同時檢查：
-
-- 最低 / 最高學分
-- 平均風險
-- 高必要高風險課數
-- 先修缺口
-- 衝堂
-
-因此 0 學分方案不會再因風險低而顯示為成功。
-
-### Storage migration
-
-LocalStorage 使用 V2 schema：
-
-```text
-nckuCreditMapStateV2
-```
-
-如果偵測到 V1：
-
-1. 先保留原始 V1 備份。
-2. 遷移欄位與規則群組。
-3. 寫入 V2。
-
-若 JSON 損壞，原始內容會先以 corrupt backup key 保留，不會直接覆蓋掉。
-
-## 隱私
-
-公開 repo 不應提交：
-
-- 姓名 / 學號
-- 個人成績
-- 抵免與承認紀錄
-- 私人完整課表
-- 含個人狀態的 JSON / CSV 備份
-- 未清理的聊天逐字稿
-
-公開 demo 只使用 `curriculum.js` 的去識別化資料。
-
-## 執行
-
-直接以瀏覽器開啟 `index.html` 即可。由於使用 ES modules，若瀏覽器限制 `file://` module 載入，可在專案目錄使用任一靜態伺服器開啟。
-
-## 驗證
-
-需要 Node.js 22：
+Verification:
 
 ```bash
 npm run verify
 ```
 
-會執行：
-
-```bash
-node --check app.js
-node credit-map.test.mjs
+## Architecture
+```text
+curriculum.js       stable curriculum facts + verified official codes
+term-data.js        semester-specific teachers / rooms / time slots
+app-core.js         pure rules, planning, imports, GPA, validation
+app-ui.js           LocalStorage, snapshots, CRUD, rendering
+index.html          application shell
+style.css           responsive UI
+credit-map-v2.test.mjs
+.github/workflows/verify.yml
 ```
 
-測試覆蓋：
+`courseCode` is an internal stable identifier. `officialCourseCode` is separate and is only populated when independently verified. Future offering information can be marked estimated rather than presented as confirmed.
 
-- 設計必修 cap
-- 通識特殊認列 cap
-- `countsTowardGraduation`
-- `recognizedCredits`
-- 本系選修最低學分
-- 已完成高風險課排除
-- term config
-- prerequisite engine
-- conflict engine
-- A/B/C 學分與風險 validation
-- V1 -> V2 migration
-- backup round-trip
-- CSV formula injection 防護
-- 公開 defaults 去識別化
+## Privacy model
+The repository contains sanitized curriculum/demo data only. Personal grades, completed-course states, credit recognition and schedules should remain in browser LocalStorage or ignored local export folders. Do not commit personal transcript data.
 
-GitHub Actions 會在 push 與 PR 自動執行同一組驗證。
+## Authoritative references
+Curriculum requirements are based on the NCKU Hydraulic and Ocean Engineering 114-entry required-course table and graduation-credit checklist. Official course codes are cross-checked against the department undergraduate-course page. GPA conversion follows the NCKU Registrar's post-2015 4.3 grade-point table.
+
+Because course offerings, teachers, rooms and registration rules can change by semester, verify them against NCKU's official course query before registration.
+
+## Current limits
+- No authenticated SIS integration.
+- No automatic course registration.
+- No full constraint-solver auto-scheduler yet.
+- Some official course codes remain intentionally blank when the current source does not unambiguously identify the 114-entry version.
