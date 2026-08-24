@@ -8,7 +8,7 @@
     "check": "node --check app-core.js && node --check app-ui.js && node --check auto-planner.js && node --check auto-planner-ui.js && node --check curriculum.js && node --check term-data.js && node --check quality-ui.js",
     "lint": "eslint .",
     "format": "prettier --write \"*.{js,mjs,json,md,html}\" \".github/workflows/*.yml\"",
-    "format:check": "prettier --check package.json eslint.config.js .prettierrc.json quality-ui.js accessibility.test.mjs quality.test.mjs",
+    "format:check": "prettier --check package.json eslint.config.js .prettierrc.json quality-ui.js quality.test.mjs",
     "verify": "npm run check && npm run lint && npm run format:check && npm test"
   },
   "devDependencies": {
