@@ -1,0 +1,122 @@
+export const APP_CONFIG = Object.freeze({
+  curriculumYear: "114",
+  currentTerm: "115-1",
+  nextTerm: "115-2",
+  storageKey: "nckuCreditMapStateV2",
+  legacyStorageKey: "nckuCreditMapStateV1",
+  backupVersion: 2,
+});
+
+export const REQUIREMENTS = Object.freeze({
+  totalCredits: 135,
+  major: {
+    total: 76,
+    core: 71,
+    design: { requiredCredits: 4, maxRecognizedCredits: 4 },
+    requiredElective: 1,
+  },
+  general: {
+    total: 28,
+    caps: { naturalEngineering: 2 },
+  },
+  elective: {
+    total: 31,
+    departmentMinimum: 10,
+  },
+  crossDomain: 0,
+  gates: {
+    peTerms: 4,
+    englishThreshold: true,
+  },
+});
+
+const c = (id, courseName, credits, requirementGroup, extra = {}) => ({
+  id,
+  courseCode: id,
+  courseName,
+  credits,
+  requirementGroup,
+  category:
+    requirementGroup.startsWith("major") ? "水利必修" :
+    requirementGroup === "general" ? "通識" :
+    requirementGroup === "elective" ? "自由選修" :
+    requirementGroup === "cross-domain" ? "跨域" : "其他",
+  countsTowardGraduation: credits > 0 && requirementGroup !== "gate",
+  status: "未修",
+  semester: "待排",
+  grade: "",
+  gpaRisk: "中",
+  necessityScore: 3,
+  riskScore: 3,
+  decision: "none",
+  planA: false,
+  planB: false,
+  planC: false,
+  decisionNote: "",
+  term: "",
+  slots: [],
+  prerequisites: [],
+  departmentElective: false,
+  generalSubarea: "",
+  gateType: "",
+  ...extra,
+});
+
+export const COURSE_CATALOG = Object.freeze([
+  c("ENG-FOREIGN", "外國語言（英文）", 4, "general", { gpaRisk: "低" }),
+  c("CHINESE-1", "大學國文（一）", 2, "general", { gpaRisk: "低" }),
+  c("CHINESE-2", "大學國文（二）", 2, "general", { gpaRisk: "低" }),
+  c("TAINAN", "踏溯台南", 1, "general", { gpaRisk: "低" }),
+  c("GEN-PHYS", "應用物理與實驗", 2, "general", { generalSubarea: "naturalEngineering", gpaRisk: "低" }),
+  c("GEN-CHEM", "應用化學與實驗", 2, "general", { generalSubarea: "naturalEngineering", gpaRisk: "低" }),
+  c("GENDER", "性別與社會", 2, "general", { gpaRisk: "低" }),
+  c("PHIL", "哲學概論", 2, "general", { gpaRisk: "低" }),
+  c("LAW", "法學緒論", 2, "general", { gpaRisk: "低" }),
+  c("HEALTH", "運動與健康", 2, "general", { gpaRisk: "低" }),
+  c("GENERAL-GAP", "領域通識", 6, "general", { gpaRisk: "低" }),
+  c("FUSION", "融合通識", 1, "general", { gpaRisk: "低" }),
+
+  c("DRAWING", "工程圖學", 2, "major-core", { term: "115-1", slots: [{ day: 5, start: 5, end: 8 }], decision: "backup" }),
+  c("CALC-1", "微積分（一）", 3, "major-core"),
+  c("CALC-2", "微積分（二）", 3, "major-core", { term: "115-2" }),
+  c("PHYS-1", "普通物理學（一）", 3, "major-core", { term: "115-1", slots: [{ day: 1, start: 8, end: 8 }, { day: 4, start: 5, end: 6 }], decision: "priority", gpaRisk: "高", necessityScore: 5, riskScore: 4 }),
+  c("PHYS-2", "普通物理學（二）", 3, "major-core", { term: "115-2", prerequisites: [{ courseCode: "PHYS-1" }] }),
+  c("PHYS-LAB-1", "普通物理學實驗（一）", 1, "major-core", { term: "115-1", slots: [{ day: 3, start: 1, end: 3 }], decision: "priority" }),
+  c("PHYS-LAB-2", "普通物理學實驗（二）", 1, "major-core", { term: "115-2", prerequisites: [{ courseCode: "PHYS-LAB-1" }] }),
+  c("ENG-MECH", "工程力學", 3, "major-core", { term: "115-2" }),
+  c("OCEAN-PHYS", "海洋物理學", 3, "major-core"),
+  c("GEOLOGY", "工程地質學", 2, "major-core", { term: "115-1", slots: [{ day: 1, start: 7, end: 8 }], decision: "backup" }),
+  c("ENG-MATH-1", "工程數學（一）", 3, "major-core", { prerequisites: [{ courseCode: "CALC-2", minimumGrade: 45 }] }),
+  c("ENG-MATH-2", "工程數學（二）", 3, "major-core", { term: "115-2", prerequisites: [{ courseCode: "ENG-MATH-1" }] }),
+  c("FLUID-1", "流體力學（一）", 3, "major-core", { term: "115-1", slots: [{ day: 2, start: 2, end: 2 }, { day: 5, start: 3, end: 4 }], prerequisites: [{ courseCode: "PHYS-1", minimumGrade: 45 }], gpaRisk: "高", necessityScore: 5, riskScore: 5 }),
+  c("FLUID-2", "流體力學（二）", 3, "major-core", { term: "115-2", prerequisites: [{ courseCode: "FLUID-1" }] }),
+  c("FLUID-LAB", "流體力學實驗", 2, "major-core", { term: "115-1", prerequisites: [{ courseCode: "FLUID-1", minimumGrade: 45 }] }),
+  c("SURVEY", "測量學", 2, "major-core", { term: "115-2" }),
+  c("SURVEY-LAB", "測量學實習", 1, "major-core", { term: "115-2" }),
+  c("WATER-1", "水資源工程（一）", 3, "major-core", { term: "115-1", slots: [{ day: 2, start: 8, end: 8 }, { day: 3, start: 3, end: 4 }], decision: "backup" }),
+  c("MATERIAL", "材料力學", 2, "major-core", { term: "115-1", slots: [{ day: 4, start: 5, end: 6 }], prerequisites: [{ courseCode: "ENG-MECH", minimumGrade: 60 }] }),
+  c("OPEN-CHANNEL", "明渠水力學", 3, "major-core", { term: "115-1", slots: [{ day: 4, start: 2, end: 4 }], prerequisites: [{ courseCode: "FLUID-1", minimumGrade: 50 }] }),
+  c("WAVE", "波浪力學", 3, "major-core", { term: "115-1", slots: [{ day: 2, start: 6, end: 6 }, { day: 3, start: 3, end: 4 }], prerequisites: [{ courseCode: "FLUID-1", minimumGrade: 50 }] }),
+  c("COASTAL-1", "海岸海洋工程（一）", 3, "major-core", { term: "115-2" }),
+  c("STAT", "工程統計學", 3, "major-core", { term: "115-2" }),
+  c("SOIL", "土壤力學", 3, "major-core", { term: "115-2" }),
+  c("SOIL-LAB", "土壤力學實驗", 1, "major-core", { term: "115-2", prerequisites: [{ courseCode: "SOIL" }] }),
+  c("RC", "鋼筋混凝土學", 2, "major-core", { term: "115-2" }),
+  c("RESEARCH-1", "專題研究（一）", 1, "major-core", { term: "115-2" }),
+  c("RESEARCH-2", "專題研究（二）", 1, "major-core", { term: "115-1", prerequisites: [{ courseCode: "RESEARCH-1" }] }),
+
+  c("DESIGN-FLOOD", "防洪排水工程設計", 2, "major-design", { term: "115-1", slots: [{ day: 5, start: 6, end: 8 }] }),
+  c("DESIGN-WATER", "水資源工程設計", 2, "major-design", { term: "115-2" }),
+  c("DESIGN-OCEAN", "海洋工程設計", 2, "major-design", { term: "115-1", slots: [{ day: 1, start: 6, end: 8 }] }),
+  c("DESIGN-COAST", "海岸工程設計", 2, "major-design", { term: "115-2" }),
+  c("HOE-INTRO", "水利及海洋工程概論", 1, "major-required-elective", { term: "115-1", slots: [{ day: 1, start: 7, end: 7 }], decision: "backup" }),
+
+  c("GATE-PE", "體育（必修四學期）", 0, "gate", { countsTowardGraduation: false, gateType: "pe", gpaRisk: "低" }),
+  c("GATE-ENGLISH", "英語畢業門檻", 0, "gate", { countsTowardGraduation: false, gateType: "english", gpaRisk: "低" }),
+]);
+
+export const PLAN_CONFIG = Object.freeze([
+  { key: "planA", label: "A 案：穩健復學", minCredits: 12, maxCredits: 15, maxHighNeedHighRisk: 1, maxAverageRisk: 3 },
+  { key: "planB", label: "B 案：正常推進", minCredits: 15, maxCredits: 18, maxHighNeedHighRisk: 2, maxAverageRisk: 3.5 },
+  { key: "planC", label: "C 案：保守修復", minCredits: 9, maxCredits: 12, maxHighNeedHighRisk: 1, maxAverageRisk: 3 },
+]);
