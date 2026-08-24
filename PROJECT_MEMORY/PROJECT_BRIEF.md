@@ -1,49 +1,33 @@
-# NCKU Credit Map Project Brief
+# Project Brief — NCKU Credit Map v0.3
 
-## 專案定位
+## Goal
+A local-first academic planning and graduation decision-support tool for NCKU Hydraulic and Ocean Engineering.
 
-`ncku-credit-map` 是一個本機使用的學分地圖工具，用來整理復學前後的畢業進度、必修缺口、候選課程、衝堂風險、暑假預習優先順序與 GPA 風險。
+## Product principles
+- Graduation recognition is rule-based, not a raw sum of completed credits.
+- Public source code contains sanitized curriculum/demo data only.
+- Personal academic state lives in LocalStorage or user-exported files.
+- Stable curriculum facts and term-specific offering data are separate.
+- Unknown official values stay blank rather than being guessed.
 
-這個專案的重點不是取代學校正式系統，而是把分散在檢核表、課表規劃、抵免狀態與個人判斷中的資訊整理成一個可操作的工作台。
+## Current scope
+- 114-entry graduation rule engine.
+- Structured prerequisites and schedule conflict detection.
+- A/B/C course-load plans.
+- Full course CRUD, search, JSON/CSV import/export.
+- Five local undo snapshots.
+- Dependency-chain summary.
+- NCKU 4.3 GPA projection.
+- Responsive mobile card layout.
 
-## 使用情境
+## Data layers
+- `curriculum.js`: stable curriculum requirements, internal IDs, verified official course codes.
+- `term-data.js`: term-specific teachers, locations, slots, certainty.
+- `app-core.js`: pure normalization/rules/calculation/import logic.
+- `app-ui.js`: browser state, storage, CRUD and rendering.
 
-- Demo 復學後的畢業進度與尚缺學分。
-- 檢查必修、通識、自由選修、跨域等分類的缺口。
-- 管理課程狀態，例如已修、已抵免、已認列、未修、候選、重修。
-- 規劃 115-1 優先或備選課程。
-- 看出高 GPA 風險、卡畢業課、先修未滿與衝堂問題。
-- 匯出 JSON 備份，之後再匯入恢復資料。
-- 匯出 CSV 到 Excel 或 Google Sheets 做額外整理。
-
-## 已做功能
-
-- 可編輯學分需求設定。
-- Dashboard 統計已完成學分、尚缺學分、分類完成度、高風險課程數量與卡關課程數量。
-- 課程 CRUD：新增、編輯、刪除、展開詳細資料。
-- 課程篩選：分類、狀態、決策狀態、GPA 風險、是否必修、是否卡畢業。
-- 快速篩選：未修必修、高風險課、115-1 優先、115-1 備選、先修未滿、卡畢業課。
-- 115-1 候選課表。
-- 衝堂矩陣。
-- 暑假預習表。
-- 缺口分析與行動清單。
-- JSON 匯出與匯入。
-- CSV 匯出。
-- 載入 114 檢核表預設資料。
-- LocalStorage 本機保存。
-- Node-based logic test。
-
-## 明確不做
-
-- 不做帳號系統。
-- 不做後端或資料庫。
-- 不做雲端同步。
-- 不串接學校正式系統。
-- 不保證取代學校、系辦或教務處的正式畢業審查。
-- 不把完整聊天逐字稿或個資直接提交到 Git。
-
-## 隱私原則
-
-專案可以保存功能、架構、SOP、TODO 與整理版決策，但不應把姓名、學號、完整課表、成績細節、抵免紀錄、私人下載路徑或未清理的聊天逐字稿直接提交到 Git。
-
-如果之後真的需要保存聊天紀錄，應放在 `docs/chat-transcripts/` 並先手動刪除個資與不想公開的內容。
+## Non-goals for v0.3
+- Automatic registration.
+- Scraping SIS behind authentication.
+- Full constraint-solver schedule generation.
+- Treating estimated future offerings as confirmed facts.
