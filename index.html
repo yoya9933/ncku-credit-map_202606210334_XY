@@ -27,9 +27,9 @@
 
   <header class="site-header">
     <div class="page-shell">
-      <p class="eyebrow">NCKU Credit Map v1.1</p>
+      <p class="eyebrow">NCKU Credit Map v1.2</p>
       <h1>學分地圖</h1>
-      <p class="header-note">畢業規則、先修、衝堂、自動排課、修課方案與 GPA 模擬集中在同一個本機工具。</p>
+      <p class="header-note">114 級官方畢業規則、先修、衝堂、自動排課、修課方案與 GPA 模擬集中在同一個本機工具。</p>
     </div>
   </header>
 
@@ -38,7 +38,7 @@
       <div class="section-heading">
         <div>
           <h2 id="graduation-heading">畢業進度</h2>
-          <p>114 學年度規則；「修過」與「可認列」分開計算。</p>
+          <p>114 學年度入學生規則；正式必修、通識子規則與總學分分開檢核。</p>
         </div>
         <div class="heading-actions no-print">
           <button id="printProgress" class="secondary" type="button">列印畢業進度</button>
@@ -81,7 +81,7 @@
     </section>
 
     <section class="section" aria-labelledby="gpa-heading">
-      <div class="section-heading"><div><h2 id="gpa-heading">GPA 模擬</h2><p>採成大 4.3 積分對照；在課程表「預估」欄填百分制成績。</p></div></div>
+      <div class="section-heading"><div><h2 id="gpa-heading">GPA 模擬</h2><p>採成大 4.3 積分對照；只計本學期尚未完成且有填預估成績的課。</p></div></div>
       <div class="gpa-grid">
         <label><span>目前累積 GPA</span><input id="currentGpa" type="number" min="0" max="4.3" step="0.01" placeholder="例如 3.20"></label>
         <label><span>目前已計 GPA 學分</span><input id="currentGpaCredits" type="number" min="0" step="1" placeholder="例如 40"></label>
@@ -90,7 +90,7 @@
     </section>
 
     <section class="section" aria-labelledby="course-data-heading">
-      <div class="section-heading"><div><h2 id="course-data-heading">課程資料</h2><p>完整 CRUD；正式課號、教師、教室、學期與先修可在編輯器中調整。</p></div><button id="addCourse" type="button">新增課程</button></div>
+      <div class="section-heading"><div><h2 id="course-data-heading">課程資料</h2><p>完整 CRUD；通識分類、正式課號、學期與先修可在編輯器中調整。</p></div><button id="addCourse" type="button">新增課程</button></div>
       <div class="course-toolbar"><label class="search-field"><span>搜尋</span><input id="courseSearch" type="search" placeholder="課名、內部代碼、正式課號"></label></div>
       <div class="table-wrap responsive-table course-table-wrap">
         <table class="course-table">
@@ -124,13 +124,14 @@
         <label><span>學分</span><input name="credits" type="number" min="0" step="0.5" required></label>
         <label><span>認列學分</span><input name="recognizedCredits" type="number" min="0" step="0.5" required></label>
         <label><span>規則群組</span><select name="requirementGroup"><option>major-core</option><option>major-design</option><option>major-required-elective</option><option>general</option><option>elective</option><option>cross-domain</option><option>gate</option><option>other</option></select></label>
+        <label><span>通識分類</span><select name="generalSubarea"><option value="">非通識／未分類</option><option value="languageChinese">基礎國文</option><option value="languageForeign">外國語言</option><option value="tainan">踏溯台南</option><option value="humanities">人文學</option><option value="socialSciences">社會科學</option><option value="naturalEngineering">自然與工程科學</option><option value="lifeHealth">生命科學與健康</option><option value="interdisciplinary">科際整合</option><option value="fusion">融合通識</option><option value="fusionLifePractice">通識教育生活實踐</option></select></label>
         <label><span>狀態</span><select name="status"><option>未修</option><option>候選</option><option>已修</option><option>已抵免</option><option>已認列</option><option>重修</option></select></label>
         <label><span>實際成績</span><input name="grade" inputmode="decimal"></label>
         <label><span>預估成績</span><input name="expectedGrade" inputmode="decimal"></label>
         <label><span>規劃學期</span><input name="term" placeholder="115-1"></label>
         <label><span>教師</span><input name="teacher"></label>
         <label><span>教室</span><input name="location"></label>
-        <label class="wide"><span>先修（代碼:最低分，以逗號分隔）</span><input name="prerequisites" placeholder="PHYS-1:45, CALC-2:45"></label>
+        <label class="wide"><span>先修（逗號＝AND、|＝OR）</span><input name="prerequisites" placeholder="ENG-MECH:60 或 CALC-1:45 | CALC-2:45"></label>
         <label><span>體育等 Gate 進度</span><input name="gateProgress" type="number" min="0" step="1"></label>
         <label class="checkbox-label"><input name="departmentElective" type="checkbox"><span>本系選修</span></label>
         <label class="checkbox-label"><input name="countsTowardGraduation" type="checkbox"><span>計入畢業</span></label>
